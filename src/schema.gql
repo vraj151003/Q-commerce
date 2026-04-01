@@ -1,0 +1,58 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type User {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+  isVerified: Boolean!
+  adminApproved: Boolean!
+  mobile: String!
+  createdAt: DateTime!
+  roleId: Float
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type AuthResponse {
+  accessToken: String!
+  user: User!
+}
+
+type Query {
+  hello: String!
+  getAllUserProfiles: [User!]!
+  getUserProfileById(id: String!): User!
+  getCurrentUserProfile: User!
+}
+
+type Mutation {
+  register(input: RegisterInput!): User!
+  login(input: LoginInput!): AuthResponse!
+  updateUserProfile(input: UpdateUserProfileInput!): User!
+}
+
+input RegisterInput {
+  firstName: String!
+  lastName: String!
+  email: String!
+  password: String!
+  mobile: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input UpdateUserProfileInput {
+  firstName: String
+  lastName: String
+  mobile: String
+  password: String
+}
