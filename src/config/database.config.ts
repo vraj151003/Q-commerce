@@ -11,4 +11,15 @@ export default registerAs('database', () => ({
   synchronize: process.env.NODE_ENV !== 'production',
   jwtSecret: process.env.JWT_SECRET || 'test',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '3d',
+  email: process.env.EMAIL || process.env.MAIL_USER || '',
+  email_password:
+    process.env.EMAIL_PASSWORD || process.env.MAIL_PASSWORD || '',
+  mail_host: process.env.MAIL_HOST || 'smtp.gmail.com',
+  mail_port: parseInt(process.env.MAIL_PORT || '587', 10),
+  mail_secure: process.env.MAIL_SECURE === 'true',
+  mail_from:
+    process.env.MAIL_FROM ||
+    process.env.EMAIL ||
+    process.env.MAIL_USER ||
+    '',
 }));

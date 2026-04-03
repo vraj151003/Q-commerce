@@ -17,4 +17,7 @@ export class RegisterInput {
 
   @Field()
   mobile: string;
+
+  @Field({ nullable: true })
+  roleId?: string;
 }

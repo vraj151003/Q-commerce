@@ -9,6 +9,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AppResolver } from './app.resolver';
 import { AuthModule } from './modules/auth/auth.module';
+import { RolesModule } from './modules/roles/roles.module';
+import { PermissionModule } from './modules/permission/permission.module';
 
 @Module({
   imports: [
@@ -19,6 +21,7 @@ import { AuthModule } from './modules/auth/auth.module';
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
+      path: '/graphql',
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       playground: true,
       context: ({ req }) => ({ req }),
@@ -39,6 +42,8 @@ import { AuthModule } from './modules/auth/auth.module';
       }),
     }),
     AuthModule,
+    RolesModule,
+    PermissionModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],

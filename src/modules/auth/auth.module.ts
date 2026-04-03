@@ -5,14 +5,18 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { StringValue } from 'ms';
 import { User } from '../users/entity/users.entity';
+import { Role } from '../roles/entity/roles.entity';
+import { Permission } from '../permission/entity/permission.entity';
+import { Otp } from '../otp/entity/otp.entity';
 import { AuthService } from './auth.service';
 import { AuthResolver } from './auth.resolver';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { JwtStrategy } from '../../common/strategies/jwt.strategy';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { MailService } from '../../common/mail/mail.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Role, Permission, Otp]),
     ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
@@ -26,6 +30,6 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
       }),
     }),
   ],
-  providers: [AuthService, AuthResolver, JwtStrategy, JwtAuthGuard],
+  providers: [AuthService, AuthResolver, JwtStrategy, JwtAuthGuard, MailService],
 })
 export class AuthModule {}

@@ -2,6 +2,17 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type Permission {
+  id: ID!
+  name: String!
+}
+
+type Role {
+  id: ID!
+  name: String!
+  permissions: [Permission!]
+}
+
 type User {
   id: ID!
   firstName: String!
@@ -11,7 +22,7 @@ type User {
   adminApproved: Boolean!
   mobile: String!
   createdAt: DateTime!
-  roleId: Float
+  role: Role
 }
 
 """
@@ -25,16 +36,24 @@ type AuthResponse {
 }
 
 type Query {
-  hello: String!
   getAllUserProfiles: [User!]!
   getUserProfileById(id: String!): User!
   getCurrentUserProfile: User!
+  getRoles: [Role!]!
+  getRole(id: String!): Role!
 }
 
 type Mutation {
   register(input: RegisterInput!): User!
   login(input: LoginInput!): AuthResponse!
   updateUserProfile(input: UpdateUserProfileInput!): User!
+  verifyOtp(input: VerifyOtpInput!): Boolean!
+  forgotPassword(email: String!): Boolean!
+  resetPassword(input: ResetPasswordInput!): Boolean!
+  resendOtp(email: String!): Boolean!
+  createRole(name: String!): Role!
+  updateRole(id: String!, name: String!): Role!
+  deleteRole(id: String!): Role!
 }
 
 input RegisterInput {
@@ -43,6 +62,7 @@ input RegisterInput {
   email: String!
   password: String!
   mobile: String!
+  roleId: String
 }
 
 input LoginInput {
@@ -55,4 +75,15 @@ input UpdateUserProfileInput {
   lastName: String
   mobile: String
   password: String
+}
+
+input VerifyOtpInput {
+  email: String!
+  otp: String!
+}
+
+input ResetPasswordInput {
+  email: String!
+  otp: String!
+  newPassword: String!
 }

@@ -1,8 +1,10 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Role } from '../../roles/entity/roles.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -35,7 +37,7 @@ export class User {
   @Field()
   @Column({ default: false })
   adminApproved: boolean;
-
+ 
   @Field()
   @Column()
   mobile: string;
@@ -44,7 +46,7 @@ export class User {
   @CreateDateColumn()
   createdAt: Date;
 
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  roleId: number;
+  @ManyToOne(() => Role)
+  @Field(() => Role, { nullable: true })
+  role: Role;
 }
