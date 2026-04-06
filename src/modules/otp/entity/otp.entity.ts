@@ -5,7 +5,7 @@ import {
   CreateDateColumn,
 } from 'typeorm';
 import { ObjectType, Field, ID } from '@nestjs/graphql';
-import { OtpType } from 'src/common/constant/status';
+import { OtpType } from '../../../common/constant/status';
 
 @ObjectType()
 @Entity('otps')

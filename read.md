@@ -552,9 +552,381 @@ mutation RemovePermission {
       name
     }
 }
-    id
-    name
   }
 }
 ```
+
+## Category Management APIs
+
+### 21) Create Category
+
+**Requires Permission:** `CREATE_CATEGORY`
+
+```graphql
+mutation CreateCategory {
+  createCategory(
+    input: {
+      name: "Electronics"
+      description: "Electronic items and gadgets"
+    }
+  ) {
+    id
+    name
+    description
+    createdAt
+    updatedAt
+    subCategories {
+      id
+      name
+    }
+  }
+}
+```
+
+### 22) Get All Categories
+
+**Requires Permission:** `READ_CATEGORY`
+
+```graphql
+query GetCategories {
+  getCategories {
+    id
+    name
+    description
+    createdAt
+    updatedAt
+    subCategories {
+      id
+      name
+    }
+  }
+}
+```
+
+### 23) Get Category By ID
+
+**Requires Permission:** `READ_CATEGORY`
+
+```graphql
+query GetCategory {
+  getCategory(id: "CATEGORY_ID_HERE") {
+    id
+    name
+    description
+    createdAt
+    updatedAt
+    subCategories {
+      id
+      name
+    }
+  }
+}
+```
+
+### 24) Update Category
+
+**Requires Permission:** `UPDATE_CATEGORY`
+
+```graphql
+mutation UpdateCategory {
+  updateCategory(
+    input: {
+      id: "CATEGORY_ID_HERE"
+      name: "Updated Electronics"
+      description: "Updated description"
+    }
+  ) {
+    id
+    name
+    description
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### 25) Delete Category
+
+**Requires Permission:** `DELETE_CATEGORY`
+
+```graphql
+mutation DeleteCategory {
+  deleteCategory(id: "CATEGORY_ID_HERE")
+}
+```
+
+## SubCategory Management APIs
+
+### 26) Create SubCategory
+
+**Requires Permission:** `CREATE_SUBCATEGORY`
+
+```graphql
+mutation CreateSubCategory {
+  createSubCategory(
+    input: {
+      name: "Mobile Phones"
+      categoryId: "CATEGORY_ID_HERE"
+    }
+  ) {
+    id
+    name
+    createdAt
+    updatedAt
+    category {
+      id
+      name
+    }
+  }
+}
+```
+
+### 27) Get All SubCategories
+
+**Requires Permission:** `READ_SUBCATEGORY`
+
+```graphql
+query GetSubCategories {
+  getSubCategories {
+    id
+    name
+    createdAt
+    updatedAt
+    category {
+      id
+      name
+    }
+  }
+}
+```
+
+### 28) Get SubCategory By ID
+
+**Requires Permission:** `READ_SUBCATEGORY`
+
+```graphql
+query GetSubCategory {
+  getSubCategory(id: "SUBCATEGORY_ID_HERE") {
+    id
+    name
+    createdAt
+    updatedAt
+    category {
+      id
+      name
+    }
+  }
+}
+```
+
+### 29) Update SubCategory
+
+**Requires Permission:** `UPDATE_SUBCATEGORY`
+
+```graphql
+mutation UpdateSubCategory {
+  updateSubCategory(
+    input: {
+      id: "SUBCATEGORY_ID_HERE"
+      name: "Smartphones"
+    }
+  ) {
+    id
+    name
+    createdAt
+    updatedAt
+    category {
+      id
+      name
+    }
+  }
+}
+```
+
+### 30) Delete SubCategory
+
+**Requires Permission:** `DELETE_SUBCATEGORY`
+
+```graphql
+mutation DeleteSubCategory {
+  deleteSubCategory(id: "SUBCATEGORY_ID_HERE")
+}
+```
+
+## Product Management APIs
+
+### 31) Create Product
+
+**Requires Permission:** `CREATE_PRODUCT`
+
+```graphql
+mutation CreateProduct {
+  createProduct(
+    input: {
+      name: "iPhone 15 Pro"
+      description: "Latest iPhone model"
+      longDescription: "The most advanced iPhone with titanium design"
+      mrp: 99999
+      sellingPrice: 89999
+      discountPercentage: 10
+      stockQuantity: 50
+      isAvailable: true
+      lowStockThreshold: 5
+      unit: "pieces"
+      unitValue: 1
+      packSize: "1 piece"
+      brand: "Apple"
+      isVeg: true
+      expiryDays: null
+      images: ["image1.jpg", "image2.jpg"]
+      shopId: "SHOP_ID_HERE"
+      categoryId: "CATEGORY_ID_HERE"
+      subCategoryId: "SUBCATEGORY_ID_HERE"
+    }
+  ) {
+    id
+    name
+    description
+    longDescription
+    mrp
+    sellingPrice
+    discountPercentage
+    stockQuantity
+    isAvailable
+    lowStockThreshold
+    unit
+    unitValue
+    packSize
+    brand
+    isVeg
+    expiryDays
+    images
+    createdAt
+    updatedAt
+    shop {
+      id
+      name
+    }
+    category {
+      id
+      name
+    }
+    subCategory {
+      id
+      name
+    }
+  }
+}
+```
+
+### 32) Get All Products
+
+**Requires Permission:** `READ_PRODUCT`
+
+```graphql
+query GetProducts {
+  getProducts {
+    id
+    name
+    description
+    mrp
+    sellingPrice
+    stockQuantity
+    isAvailable
+    images
+    createdAt
+    updatedAt
+    shop {
+      id
+      name
+    }
+    category {
+      id
+      name
+    }
+    subCategory {
+      id
+      name
+    }
+  }
+}
+```
+
+### 33) Get Product By ID
+
+**Requires Permission:** `READ_PRODUCT`
+
+```graphql
+query GetProduct {
+  getProduct(id: "PRODUCT_ID_HERE") {
+    id
+    name
+    description
+    longDescription
+    mrp
+    sellingPrice
+    discountPercentage
+    stockQuantity
+    isAvailable
+    lowStockThreshold
+    unit
+    unitValue
+    packSize
+    brand
+    isVeg
+    expiryDays
+    images
+    createdAt
+    updatedAt
+    shop {
+      id
+      name
+    }
+    category {
+      id
+      name
+    }
+    subCategory {
+      id
+      name
+    }
+  }
+}
+```
+
+### 34) Update Product
+
+**Requires Permission:** `UPDATE_PRODUCT`
+
+```graphql
+mutation UpdateProduct {
+  updateProduct(
+    input: {
+      id: "PRODUCT_ID_HERE"
+      name: "iPhone 15 Pro Max"
+      sellingPrice: 94999
+      stockQuantity: 30
+      isAvailable: true
+    }
+  ) {
+    id
+    name
+    description
+    mrp
+    sellingPrice
+    stockQuantity
+    isAvailable
+    updatedAt
+  }
+}
+```
+
+### 35) Delete Product
+
+**Requires Permission:** `DELETE_PRODUCT`
+
+```graphql
+mutation DeleteProduct {
+  deleteProduct(id: "PRODUCT_ID_HERE")
+}
 ````

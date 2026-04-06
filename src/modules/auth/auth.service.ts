@@ -17,7 +17,7 @@ import { VerifyOtpInput } from './dto/verify-otp.input';
 import { ResetPasswordInput } from './dto/reset-password.input';
 import { Otp } from '../otp/entity/otp.entity';
 import { OtpQueueService } from '../../common/queues/otp-queue.service';
-import { OtpType } from 'src/common/constant/status';
+import { OtpType } from '../../common/constant/status';
 import { isUUID } from 'class-validator';
 
 @Injectable()

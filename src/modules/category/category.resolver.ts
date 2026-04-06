@@ -1,11 +1,11 @@
 import { Query, UseGuards } from '@nestjs/common';
 import { Args, Mutation, Resolver, Query as GQLQuery } from '@nestjs/graphql';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
-import { PermissionsGuard } from 'src/common/guards/permissions.guard';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { CategoryService } from './category.service';
 import { Category } from './entity/category.entity';
 import { CreateCategoryInput } from './dto/create-category.input';
-import { Permissions } from 'src/common/decorators/permissions.decorator';
+import { Permissions } from '../../common/decorators/permissions.decorator';
 import { UpdateCategoryInput } from './dto/update-category.input';
 
 @Resolver(() => Category)
@@ -22,6 +22,11 @@ export class CategoryResolver {
   @GQLQuery(() => [Category])
   getCategories() {
     return this.categoryService.findAllCategory();
+  }
+
+  @GQLQuery(() => Category)
+  getCategory(@Args('id') id: string) {
+    return this.categoryService.findOneCategory(id);
   }
 
   @Mutation(() => Category)

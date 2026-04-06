@@ -193,6 +193,7 @@ type Query {
   getAllShops: ShopListResponse!
   getShopbyId(id: String!): ShopResponse!
   getCategories: [Category!]!
+  getCategory(id: String!): Category!
   getSubCategories: [SubCategory!]!
   getSubCategory(id: String!): SubCategory!
 }
