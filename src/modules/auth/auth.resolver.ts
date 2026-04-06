@@ -1,15 +1,16 @@
 import { UseGuards } from '@nestjs/common';
-import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
-import { User } from '../users/entity/users.entity';
 import { RegisterInput } from './dto/register.input';
-import { AuthResponse } from './dto/auth.response';
+import {
+  UserResponse,
+  AuthResponseWrapper,
+  BooleanResponse,
+} from '../../common/dto/api-response.dto';
 import { LoginInput } from './dto/login.input';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { UpdateUserProfileInput } from './dto/update-user-profile.input';
 import { VerifyOtpInput } from './dto/verify-otp.input';
 import { ResetPasswordInput } from './dto/reset-password.input';
-import { ApiResponse } from '../../common/dto/api-response.dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 
@@ -17,7 +18,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 export class AuthResolver {
   constructor(private authService: AuthService) {}
 
-  @Mutation(() => ApiResponse<User>)
+  @Mutation(() => UserResponse)
   async register(@Args('input') input: RegisterInput) {
     const user = await this.authService.register(input);
     return {
@@ -27,7 +28,7 @@ export class AuthResolver {
     };
   }
 
-  @Mutation(() => ApiResponse<AuthResponse>)
+  @Mutation(() => AuthResponseWrapper)
   async login(@Args('input') input: LoginInput) {
     const authResult = await this.authService.login(input);
     return {
@@ -37,71 +38,9 @@ export class AuthResolver {
     };
   }
 
-  @Query(() => ApiResponse<User[]>)
-  async getAllUserProfiles() {
-    const users = await this.authService.getAllUsers();
-    return {
-      statusCode: 200,
-      message: 'Users retrieved successfully',
-      data: users,
-    };
-  }
-
-  @Query(() => ApiResponse<User>)
-  async getUserProfileById(@Args('id') id: string) {
-    const user = await this.authService.getUserById(id);
-    return {
-      statusCode: 200,
-      message: 'User retrieved successfully',
-      data: user,
-    };
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Query(() => ApiResponse<User>)
-  async getCurrentUserProfile(@Context() context: any) {
-    const user = context.req.user;
-    const currentUser = await this.authService.getCurrentUser(user.userId);
-    return {
-      statusCode: 200,
-      message: 'Current user retrieved successfully',
-      data: currentUser,
-    };
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Mutation(() => ApiResponse<User>)
-  async updateUserProfile(
-    @Context() context: any,
-    @Args('input') input: UpdateUserProfileInput,
-  ) {
-    const user = context.req.user;
-    const updatedUser = await this.authService.updateUserProfile(
-      user.userId,
-      input,
-    );
-    return {
-      statusCode: 200,
-      message: 'User profile updated successfully',
-      data: updatedUser,
-    };
-  }
-
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @Mutation(() => ApiResponse<User>)
-  async getUserById(@Args('id') id: string) {
-    const user = await this.authService.getUserById(id);
-    return {
-      statusCode: 200,
-      message: 'User retrieved successfully',
-      data: user,
-    };
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @Mutation(() => ApiResponse<boolean>)
+  @Mutation(() => BooleanResponse)
   async deleteUser(@Args('id') id: string) {
     await this.authService.deleteUser(id);
     return {
@@ -113,7 +52,7 @@ export class AuthResolver {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @Mutation(() => ApiResponse<User>)
+  @Mutation(() => UserResponse)
   async approveUser(@Args('id') id: string) {
     const user = await this.authService.approveUser(id);
     return {
@@ -123,7 +62,7 @@ export class AuthResolver {
     };
   }
 
-  @Mutation(() => ApiResponse<boolean>)
+  @Mutation(() => BooleanResponse)
   async verifyOtp(@Args('input') input: VerifyOtpInput) {
     const result = await this.authService.verifyOtp(input);
     return {
@@ -133,7 +72,7 @@ export class AuthResolver {
     };
   }
 
-  @Mutation(() => ApiResponse<boolean>)
+  @Mutation(() => BooleanResponse)
   async forgotPassword(@Args('email') email: string) {
     const result = await this.authService.forgotpassword(email);
     return {
@@ -145,7 +84,7 @@ export class AuthResolver {
     };
   }
 
-  @Mutation(() => ApiResponse<boolean>)
+  @Mutation(() => BooleanResponse)
   async resetPassword(@Args('input') input: ResetPasswordInput) {
     const result = await this.authService.resetPassword(input);
     return {
@@ -155,7 +94,7 @@ export class AuthResolver {
     };
   }
 
-  @Mutation(() => ApiResponse<boolean>)
+  @Mutation(() => BooleanResponse)
   async resendOtp(@Args('email') email: string) {
     const result = await this.authService.resendOtp(email);
     return {

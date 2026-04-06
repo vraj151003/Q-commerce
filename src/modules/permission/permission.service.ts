@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Permission } from './entity/permission.entity';
 import { Repository } from 'typeorm';
 import { Role } from '../roles/entity/roles.entity';
+import { GetPermissionsInput } from './dto/get-permissions.input';
+import { PaginatedPermissionsResponse } from './dto/paginated-permission.response';
 
 @Injectable()
 export class PermissionService {
@@ -19,8 +21,53 @@ export class PermissionService {
     return this.permissionRepo.save(permission);
   }
 
-  findAll() {
+  findAllPermissions() {
     return this.permissionRepo.find();
+  }
+
+  async findAllPermissionsPaginated(
+    filters: GetPermissionsInput,
+  ): Promise<PaginatedPermissionsResponse> {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      sortBy = 'name',
+      sortOrder = 'ASC',
+    } = filters;
+
+    const queryBuilder = this.permissionRepo.createQueryBuilder('permission');
+
+    // Search filter
+    if (search) {
+      queryBuilder.where('permission.name ILIKE :search', {
+        search: `%${search}%`,
+      });
+    }
+
+    // Sorting
+    const sortField =
+      sortBy === 'createdAt' ? 'permission.createdAt' : 'permission.name';
+    queryBuilder.orderBy(sortField, sortOrder);
+
+    // Total count
+    const total = await queryBuilder.getCount();
+
+    // Pagination
+    const offset = (page - 1) * limit;
+    queryBuilder.skip(offset).take(limit);
+
+    const permissions = await queryBuilder.getMany();
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      permissions,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
   async assignPermission(roleId: string, permissionId: string) {

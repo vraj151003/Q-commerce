@@ -6,19 +6,18 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { LoginInput } from './dto/login.input';
-import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/entity/users.entity';
-import { RegisterInput } from './dto/register.input';
-import { UpdateUserProfileInput } from './dto/update-user-profile.input';
 import { Role } from '../roles/entity/roles.entity';
 import { Permission } from '../permission/entity/permission.entity';
-import { Otp } from '../otp/entity/otp.entity';
-import { MailService } from '../../common/mail/mail.service';
-import { OtpType } from 'src/common/constant/status';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+import { RegisterInput } from './dto/register.input';
+import { LoginInput } from './dto/login.input';
 import { VerifyOtpInput } from './dto/verify-otp.input';
 import { ResetPasswordInput } from './dto/reset-password.input';
+import { Otp } from '../otp/entity/otp.entity';
+import { OtpQueueService } from '../../common/queues/otp-queue.service';
+import { OtpType } from 'src/common/constant/status';
 import { isUUID } from 'class-validator';
 
 @Injectable()
@@ -33,7 +32,7 @@ export class AuthService {
     @InjectRepository(Otp)
     private otpRepo: Repository<Otp>,
     private jwtService: JwtService,
-    private readonly mailService: MailService,
+    private readonly otpQueueService: OtpQueueService,
   ) {}
 
   generateOtp(): string {
@@ -85,11 +84,7 @@ export class AuthService {
       isUsed: false,
     });
 
-    await this.mailService.sendEmail(
-      savedUser.email,
-      'Verify OTP',
-      `Your OTP is ${otpCode}`,
-    );
+    await this.otpQueueService.addOtpJob(savedUser.email, otpCode, 'REGISTER');
 
     return savedUser;
   }
@@ -160,33 +155,6 @@ export class AuthService {
     return this.userRepo.save(user);
   }
 
-  async getCurrentUser(userId: string): Promise<User> {
-    return this.getUserById(userId);
-  }
-
-  async updateUserProfile(
-    userId: string,
-    input: UpdateUserProfileInput,
-  ): Promise<User> {
-    const user = await this.getUserById(userId);
-
-    if (input.firstName !== undefined) {
-      user.firstName = input.firstName;
-    }
-    if (input.lastName !== undefined) {
-      user.lastName = input.lastName;
-    }
-    if (input.mobile !== undefined) {
-      user.mobile = input.mobile;
-    }
-    if (input.password) {
-      user.password = await bcrypt.hash(input.password, 10);
-    }
-
-    // Email is intentionally not updatable from this API.
-    return this.userRepo.save(user);
-  }
-
   async verifyOtp(input: VerifyOtpInput): Promise<boolean> {
     const record = await this.otpRepo.findOne({
       where: {
@@ -230,11 +198,7 @@ export class AuthService {
       isUsed: false,
     });
 
-    await this.mailService.sendEmail(
-      email,
-      'Reset Password OTP',
-      `Your OTP for resetting password is ${otpCode}`,
-    );
+    await this.otpQueueService.addOtpJob(email, otpCode, 'FORGOT_PASSWORD');
     return true;
   }
 
@@ -277,11 +241,7 @@ export class AuthService {
       type: OtpType.REGISTER,
     });
 
-    await this.mailService.sendEmail(
-      email,
-      'Resend OTP',
-      `Your new OTP is ${otpCode}`,
-    );
+    await this.otpQueueService.addOtpJob(email, otpCode, 'REGISTER');
     return true;
   }
 }

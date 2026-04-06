@@ -5,15 +5,21 @@ import { GqlAuthGuard } from '../auth/gql-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { PermissionService } from './permission.service';
-import { ApiResponse } from '../../common/dto/api-response.dto';
+import {
+  PermissionResponse,
+  PermissionListResponse,
+  BooleanResponse,
+} from '../../common/dto/api-response.dto';
+import { GetPermissionsInput } from './dto/get-permissions.input';
+import { PermissionListPaginatedResponse } from './dto/paginated-permission.response';
 
 @Resolver(() => Permission)
 @UseGuards(GqlAuthGuard, RolesGuard)
-@Roles('admin')
 export class PermissionResolver {
   constructor(private permissionService: PermissionService) {}
 
-  @Mutation(() => ApiResponse<Permission>)
+  @Mutation(() => PermissionResponse)
+  @Roles('admin')
   createPermission(@Args('name') name: string) {
     const permission = this.permissionService.createPermission(name);
     return {
@@ -23,17 +29,23 @@ export class PermissionResolver {
     };
   }
 
-  @Query(() => ApiResponse<Permission[]>)
-  getPermission() {
-    const permissions = this.permissionService.findAll();
+  @Query(() => PermissionListPaginatedResponse)
+  @Roles('admin')
+  async getPermission(
+    @Args('filters', { nullable: true }) filters?: GetPermissionsInput,
+  ) {
+    const result = await this.permissionService.findAllPermissionsPaginated(
+      filters || {},
+    );
     return {
       statusCode: 200,
       message: 'Permissions retrieved successfully',
-      data: permissions,
+      data: result,
     };
   }
 
-  @Mutation(() => ApiResponse<boolean>)
+  @Mutation(() => BooleanResponse)
+  @Roles('admin')
   async assignPermission(
     @Args('roleId', { type: () => String }) roleId: string,
     @Args('permissionId', { type: () => String }) permissionId: string,
@@ -46,7 +58,8 @@ export class PermissionResolver {
     };
   }
 
-  @Mutation(() => ApiResponse<boolean>)
+  @Mutation(() => BooleanResponse)
+  @Roles('admin')
   async removePermission(
     @Args('roleId', { type: () => String }) roleId: string,
     @Args('permissionId', { type: () => String }) permissionId: string,
@@ -59,12 +72,14 @@ export class PermissionResolver {
     };
   }
 
-  @Query(() => ApiResponse<Permission[]>)
-  getpermissionByRole(@Args('roleId', { type: () => String }) roleId: string) {
-    const permissions = this.permissionService.getPermissionByRole(roleId);
+  @Query(() => PermissionListResponse)
+  @Roles('admin')
+  async getPermissionByRole(@Args('roleId') roleId: string) {
+    const permissions =
+      await this.permissionService.getPermissionByRole(roleId);
     return {
       statusCode: 200,
-      message: 'Permissions by role retrieved successfully',
+      message: 'Permissions retrieved successfully',
       data: permissions,
     };
   }

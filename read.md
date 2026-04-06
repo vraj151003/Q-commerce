@@ -24,16 +24,6 @@ All API responses now follow this standard format:
 }
 ```
 
-**Status Codes:**
-
-- `200` - Success
-- `201` - Created successfully
-- `400` - Bad Request
-- `401` - Unauthorized
-- `403` - Forbidden
-- `404` - Not Found
-- `500` - Internal Server Error
-
 ## Authentication APIs
 
 ### 1) Register User
@@ -47,7 +37,7 @@ mutation RegisterUser {
       email: "john@example.com"
       password: "Pass@123"
       mobile: "9876543210"
-      roleId: 1
+      roleId: "1"
     }
   ) {
     statusCode
@@ -64,29 +54,6 @@ mutation RegisterUser {
       role {
         id
       }
-    }
-  }
-}
-```
-
-**Note:** `roleId` in `RegisterInput` is a `String`. If not provided, `role` will be `null` in the response.
-**Note:** Register now generates an OTP (`REGISTER` type), stores it in `otps`, and sends it by email. New users are created with `isVerified: false`.
-
-**Sample Response:**
-
-```json
-{
-  "data": {
-    "register": {
-      "id": "USER_UUID",
-      "firstName": "John",
-      "lastName": "Doe",
-      "email": "john@example.com",
-      "mobile": "9876543210",
-      "isVerified": false,
-      "adminApproved": false,
-      "createdAt": "2026-04-03T12:34:56.000Z",
-      "role": null
     }
   }
 }
@@ -109,6 +76,7 @@ mutation Login {
         mobile
         isVerified
         adminApproved
+        createdAt
         role {
           id
           name
@@ -123,49 +91,19 @@ mutation Login {
 }
 ```
 
-**Sample Response:**
+**Important:** The `accessToken` and `user` fields are nested inside the `data` field. Do not query them directly from the login response.
 
-```json
-{
-  "data": {
-    "login": {
-      "statusCode": 200,
-      "message": "Login successful",
-      "data": {
-        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "user": {
-          "id": "30e1d087-1598-43c4-83d0-34fd19b5e5f8",
-          "firstName": "John",
-          "lastName": "Doe",
-          "email": "john@example.com",
-          "mobile": "9876543210",
-          "isVerified": true,
-          "adminApproved": true,
-          "role": {
-            "id": "abc123-def456-ghi789",
-            "name": "admin",
-            "permissions": [
-              { "id": "perm-1", "name": "CREATE_USER" },
-              { "id": "perm-2", "name": "READ_USER" }
-            ]
-          }
-        }
-      }
+**Simplified Test Query:**
+
+```graphql
+mutation LoginTest {
+  login(input: { email: "john@example.com", password: "Pass@123" }) {
+    statusCode
+    message
+    data {
+      accessToken
     }
   }
-}
-```
-
-**If email is not verified, login response:**
-
-```json
-{
-  "errors": [
-    {
-      "message": "Please verify your email first"
-    }
-  ],
-  "data": null
 }
 ```
 
@@ -177,53 +115,54 @@ mutation Login {
 
 ```graphql
 query GetAllUserProfiles {
-  getAllUserProfiles {
+  getAllUserProfiles(
+    filters: {
+      page: 1
+      limit: 10
+      search: "john"
+      roleIds: ["role-uuid-1", "role-uuid-2"]
+      isVerified: true
+      adminApproved: true
+      sortBy: "createdAt"
+      sortOrder: "DESC"
+    }
+  ) {
     statusCode
     message
     data {
-      id
-      firstName
-      lastName
-      email
-      mobile
-      isVerified
-      adminApproved
-      createdAt
-      role {
+      users {
         id
-      }
-    }
-  }
-}
-```
-
-**Sample Response:**
-
-```json
-{
-  "data": {
-    "getAllUserProfiles": {
-      "statusCode": 200,
-      "message": "Users retrieved successfully",
-      "data": [
-        {
-          "id": "30e1d087-1598-43c4-83d0-34fd19b5e5f8",
-          "firstName": "John",
-          "lastName": "Doe",
-          "email": "john@example.com",
-          "mobile": "9876543210",
-          "isVerified": true,
-          "adminApproved": true,
-          "createdAt": "2026-04-03T09:04:38.138Z",
-          "role": {
-            "id": "abc123-def456-ghi789"
-          }
+        firstName
+        lastName
+        email
+        mobile
+        isVerified
+        adminApproved
+        createdAt
+        role {
+          id
+          name
         }
-      ]
+      }
+      total
+      page
+      limit
+      totalPages
     }
   }
 }
 ```
+
+**Filter Options:**
+
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 10)
+- `search`: Search in firstName, lastName, email, mobile
+- `roleIds`: Filter by role IDs array
+- `isVerified`: Filter by verification status
+- `adminApproved`: Filter by admin approval status
+- `sortBy`: Sort by field (createdAt, firstName, lastName, email)
+- `sortOrder`: Sort order (ASC, DESC)
 
 ### 4) Get User Profile By Id (Admin Only)
 
@@ -274,33 +213,6 @@ query GetUserById {
 }
 ```
 
-**Sample Response:**
-
-```json
-{
-  "data": {
-    "getUserById": {
-      "statusCode": 200,
-      "message": "User retrieved successfully",
-      "data": {
-        "id": "30e1d087-1598-43c4-83d0-34fd19b5e5f8",
-        "firstName": "John",
-        "lastName": "Doe",
-        "email": "john@example.com",
-        "mobile": "9876543210",
-        "isVerified": true,
-        "adminApproved": true,
-        "createdAt": "2026-04-03T09:04:38.138Z",
-        "role": {
-          "id": "abc123-def456-ghi789",
-          "name": "admin"
-        }
-      }
-    }
-  }
-}
-```
-
 ### 6) Delete User (Admin Only)
 
 **Requires Permission:** `DELETE_USER` (Admin functionality)
@@ -311,20 +223,6 @@ mutation DeleteUser {
     statusCode
     message
     data
-  }
-}
-```
-
-**Sample Response:**
-
-```json
-{
-  "data": {
-    "deleteUser": {
-      "statusCode": 200,
-      "message": "User deleted successfully",
-      "data": true
-    }
   }
 }
 ```
@@ -350,33 +248,6 @@ mutation ApproveUser {
       role {
         id
         name
-      }
-    }
-  }
-}
-```
-
-**Sample Response:**
-
-```json
-{
-  "data": {
-    "approveUser": {
-      "statusCode": 200,
-      "message": "User approved successfully",
-      "data": {
-        "id": "30e1d087-1598-43c4-83d0-34fd19b5e5f8",
-        "firstName": "John",
-        "lastName": "Doe",
-        "email": "john@example.com",
-        "mobile": "9876543210",
-        "isVerified": true,
-        "adminApproved": true,
-        "createdAt": "2026-04-03T09:04:38.138Z",
-        "role": {
-          "id": "abc123-def456-ghi789",
-          "name": "admin"
-        }
       }
     }
   }
@@ -430,9 +301,63 @@ mutation UpdateUserProfile {
 }
 ```
 
+### 7) Verify OTP
+
+```graphql
+mutation VerifyOtp {
+  verifyOtp(input: { email: "john@example.com", otp: "123456" }) {
+    statusCode
+    message
+    data
+  }
+}
+```
+
+### 8) Forgot Password
+
+```graphql
+mutation ForgotPassword {
+  forgotPassword(email: "john@example.com") {
+    statusCode
+    message
+    data
+  }
+}
+```
+
+### 9) Reset Password
+
+```graphql
+mutation ResetPassword {
+  resetPassword(
+    input: {
+      email: "john@example.com"
+      otp: "123456"
+      newPassword: "NewPass@123"
+    }
+  ) {
+    statusCode
+    message
+    data
+  }
+}
+```
+
+### 10) Resend OTP
+
+```graphql
+mutation ResendOtp {
+  resendOtp(email: "john@example.com") {
+    statusCode
+    message
+    data
+  }
+}
+```
+
 ## Role Management APIs
 
-### 7) Create Role
+### 11) Create Role
 
 **Requires Permission:** `CREATE_USER` (Admin functionality)
 
@@ -445,24 +370,51 @@ name
 
 ````
 
-### 8) Get All Roles
+### 12) Get All Roles
 
 **Requires Permission:** `READ_USER`
 
 ```graphql
 query GetRoles {
-  getRoles {
-    id
-    name
-    permissions {
-      id
-      name
+  getRoles(
+    filters: {
+      page: 1
+      limit: 10
+      search: "admin"
+      permissionIds: ["perm-uuid-1", "perm-uuid-2"]
+      sortBy: "name"
+      sortOrder: "ASC"
+    }
+  ) {
+    statusCode
+    message
+    data {
+      roles {
+        id
+        name
+        permissions {
+          id
+          name
+        }
+      }
+      total
+      page
+      limit
+      totalPages
     }
   }
 }
-````
+```
 
-### 9) Get Role By Id
+**Filter Options:**
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 10)
+- `search`: Search in role name
+- `permissionIds`: Filter by permission IDs array
+- `sortBy`: Sort by field (name, createdAt)
+- `sortOrder`: Sort order (ASC, DESC)
+
+### 13) Get Role By Id
 
 **Requires Permission:** `READ_USER`
 
@@ -479,7 +431,7 @@ query GetRole {
 }
 ```
 
-### 10) Update Role
+### 14) Update Role
 
 **Requires Permission:** `UPDATE_USER`
 
@@ -492,7 +444,7 @@ mutation UpdateRole {
 }
 ```
 
-### 11) Delete Role
+### 15) Delete Role
 
 **Requires Permission:** `DELETE_USER`
 
@@ -504,7 +456,7 @@ mutation DeleteRole {
 
 ## Permission Management APIs
 
-### 12) Create Permission
+### 16) Create Permission
 
 **Requires Permission:** `CREATE_USER` (Admin functionality)
 
@@ -517,20 +469,59 @@ mutation CreatePermission {
 }
 ```
 
-### 13) Get All Permissions
+### 17) Get All Permissions
+
+**Requires Permission:** `READ_USER` (Admin functionality)
+**Requires Authentication:** Yes (JWT Token Required)
+
+```graphql
+query GetPermissions {
+  getPermission(
+    filters: {
+      page: 1
+      limit: 10
+      search: "create"
+      sortBy: "name"
+      sortOrder: "ASC"
+    }
+  ) {
+    statusCode
+    message
+    data {
+      permissions {
+        id
+        name
+      }
+      total
+      page
+      limit
+      totalPages
+    }
+  }
+}
+```
+
+**Filter Options:**
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 10)
+- `search`: Search in permission name
+- `sortBy`: Sort by field (name, createdAt)
+- `sortOrder`: Sort order (ASC, DESC)
+
+### 18) Get Permissions by Role
 
 **Requires Permission:** `READ_USER`
 
 ```graphql
-query GetPermissions {
-  findAll {
+query GetPermissionsByRole {
+  getPermissionByRole(roleId: "ROLE_ID_HERE") {
     id
     name
   }
 }
 ```
 
-### 14) Assign Permission to Role
+### 19) Assign Permission to Role
 
 **Requires Permission:** `UPDATE_USER`
 
@@ -547,7 +538,7 @@ mutation AssignPermission {
 }
 ```
 
-### 15) Remove Permission from Role
+### 20) Remove Permission from Role
 
 **Requires Permission:** `UPDATE_USER`
 
@@ -561,44 +552,9 @@ mutation RemovePermission {
       name
     }
 }
-```
-
-### 16) Get Permissions by Role
-
-**Requires Permission:** `READ_USER`
-
-```graphql
-query GetPermissionsByRole {
-  getPermissionByRole(roleId: "ROLE_ID_HERE") {
     id
     name
   }
 }
 ```
-
-## Usage Notes:
-
-### Authentication
-
-- All protected APIs require `Authorization: Bearer <ACCESS_TOKEN>` header
-- Token is obtained from the login mutation
-- Tokens expire and need to be refreshed
-
-### Permissions
-
-- Each API endpoint requires specific permissions as mentioned above
-- Users inherit permissions from their assigned roles
-- Multiple roles can be assigned to a user for combined permissions
-
-### Error Handling
-
-- Unauthorized requests will return authentication errors
-- Insufficient permissions will return authorization errors
-- Validation errors will include detailed field information
-
-### Data Validation
-
-- Email format is validated
-- Password must meet security requirements
-- Mobile number format is validated
-- Role and Permission IDs must be valid UUIDs
+````

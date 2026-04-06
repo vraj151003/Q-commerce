@@ -5,14 +5,20 @@ import { GqlAuthGuard } from '../auth/gql-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesService } from './roles.service';
-import { ApiResponse } from '../../common/dto/api-response.dto';
+import {
+  RoleResponse,
+  RoleListResponse,
+  BooleanResponse,
+} from '../../common/dto/api-response.dto';
+import { GetRolesInput } from './dto/get-roles.input';
+import { RoleListPaginatedResponse } from './dto/paginated-role.response';
 
 @Resolver(() => Role)
 @UseGuards(GqlAuthGuard, RolesGuard)
 export class RolesResolver {
   constructor(private roleService: RolesService) {}
 
-  @Mutation(() => ApiResponse<Role>)
+  @Mutation(() => RoleResponse)
   @Roles('admin')
   createRole(@Args('name') name: string) {
     const role = this.roleService.create(name);
@@ -23,18 +29,18 @@ export class RolesResolver {
     };
   }
 
-  @Query(() => ApiResponse<Role[]>)
+  @Query(() => RoleListPaginatedResponse)
   @Roles('admin')
-  getRoles() {
-    const roles = this.roleService.findAll();
+  async getRoles(@Args('filters', { nullable: true }) filters?: GetRolesInput) {
+    const result = await this.roleService.findAllRoles(filters || {});
     return {
       statusCode: 200,
       message: 'Roles retrieved successfully',
-      data: roles,
+      data: result,
     };
   }
 
-  @Query(() => ApiResponse<Role>)
+  @Query(() => RoleResponse)
   @Roles('admin')
   getRole(@Args('id') id: string) {
     const role = this.roleService.findOne(id);
@@ -45,7 +51,7 @@ export class RolesResolver {
     };
   }
 
-  @Mutation(() => ApiResponse<Role>)
+  @Mutation(() => RoleResponse)
   @Roles('admin')
   updateRole(@Args('id') id: string, @Args('name') name: string) {
     const role = this.roleService.update(id, name);
@@ -56,7 +62,7 @@ export class RolesResolver {
     };
   }
 
-  @Mutation(() => ApiResponse<boolean>)
+  @Mutation(() => BooleanResponse)
   @Roles('admin')
   async deleteRole(@Args('id') id: string) {
     await this.roleService.remove(id);

@@ -11,6 +11,11 @@ import { AppResolver } from './app.resolver';
 import { AuthModule } from './modules/auth/auth.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { PermissionModule } from './modules/permission/permission.module';
+import { QueueModule } from './common/queues/queue.module';
+import { UsersModule } from './modules/users/users.module';
+import { ShopModule } from './modules/shop/shop.module';
+import { CategoryModule } from './modules/category/category.module';
+import { SubCategoryModule } from './modules/subcategory/subcategory.module';
 
 @Module({
   imports: [
@@ -42,8 +47,13 @@ import { PermissionModule } from './modules/permission/permission.module';
       }),
     }),
     AuthModule,
+    UsersModule,
     RolesModule,
     PermissionModule,
+    QueueModule,
+    ShopModule,
+    CategoryModule,
+    SubCategoryModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],

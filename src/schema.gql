@@ -35,25 +35,222 @@ type AuthResponse {
   user: User!
 }
 
+type Shop {
+  id: ID!
+  shopName: String!
+  addressLine1: String!
+  addressLine2: String
+  city: String!
+  state: String!
+  pinCode: String!
+  country: String!
+  pickupAddress: String
+  gstNumber: String!
+  panNumber: String!
+  businessRegistrationNumber: String
+  fssaiNumber: String
+  accountHolderName: String!
+  accountNumber: String!
+  ifscCode: String!
+  bankName: String!
+  cancelledChequeImage: String
+  alternatePhone: String
+  whatsappNumber: String
+  websiteUrl: String
+  instagram: String
+  facebook: String
+  sellerId: String
+  createdAt: DateTime!
+  shopLicense: String
+  seller: User
+}
+
+type UserResponse {
+  statusCode: Int!
+  message: String!
+  data: User
+}
+
+type AuthResponseWrapper {
+  statusCode: Int!
+  message: String!
+  data: AuthResponse
+}
+
+type RoleResponse {
+  statusCode: Int!
+  message: String!
+  data: Role
+}
+
+type PermissionResponse {
+  statusCode: Int!
+  message: String!
+  data: Permission
+}
+
+type PermissionListResponse {
+  statusCode: Int!
+  message: String!
+  data: [Permission!]
+}
+
+type ShopResponse {
+  statusCode: Int!
+  message: String!
+  data: Shop
+}
+
+type ShopListResponse {
+  statusCode: Int!
+  message: String!
+  data: [Shop!]
+}
+
+type BooleanResponse {
+  statusCode: Int!
+  message: String!
+  data: Boolean
+}
+
+type QueueStatus {
+  waiting: Int!
+  active: Int!
+  completed: Int!
+  failed: Int!
+}
+
+type QueueStatusResponse {
+  statusCode: Int!
+  message: String!
+  data: QueueStatus
+}
+
+type PaginatedRolesResponse {
+  roles: [Role!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+}
+
+type RoleListPaginatedResponse {
+  statusCode: Float!
+  message: String!
+  data: PaginatedRolesResponse
+}
+
+type PaginatedPermissionsResponse {
+  permissions: [Permission!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+}
+
+type PermissionListPaginatedResponse {
+  statusCode: Float!
+  message: String!
+  data: PaginatedPermissionsResponse
+}
+
+type PaginatedUsersResponse {
+  users: [User!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+}
+
+type UserListPaginatedResponse {
+  statusCode: Float!
+  message: String!
+  data: PaginatedUsersResponse
+}
+
+type SubCategory {
+  id: ID!
+  name: String!
+  category: Category!
+}
+
+type Category {
+  id: ID!
+  name: String!
+  description: String
+  subCategories: [SubCategory!]
+}
+
 type Query {
-  getAllUserProfiles: [User!]!
-  getUserProfileById(id: String!): User!
-  getCurrentUserProfile: User!
-  getRoles: [Role!]!
-  getRole(id: String!): Role!
+  admin_getQueueStatus: QueueStatusResponse!
+  admin_clearQueue: BooleanResponse!
+  getAllUserProfiles(filters: GetAllUsersInput): UserListPaginatedResponse!
+  getUserProfileById(id: String!): UserResponse!
+  getRoles(filters: GetRolesInput): RoleListPaginatedResponse!
+  getRole(id: String!): RoleResponse!
+  getPermission(filters: GetPermissionsInput): PermissionListPaginatedResponse!
+  getPermissionByRole(roleId: String!): PermissionListResponse!
+  getAllShops: ShopListResponse!
+  getShopbyId(id: String!): ShopResponse!
+  getCategories: [Category!]!
+  getSubCategories: [SubCategory!]!
+  getSubCategory(id: String!): SubCategory!
+}
+
+input GetAllUsersInput {
+  page: Int
+  limit: Int
+  search: String
+  roleIds: [String!]
+  isVerified: Boolean
+  adminApproved: Boolean
+  sortBy: String
+  sortOrder: String
+}
+
+input GetRolesInput {
+  page: Int
+  limit: Int
+  search: String
+  permissionIds: [String!]
+  sortBy: String
+  sortOrder: String
+}
+
+input GetPermissionsInput {
+  page: Int
+  limit: Int
+  search: String
+  sortBy: String
+  sortOrder: String
 }
 
 type Mutation {
-  register(input: RegisterInput!): User!
-  login(input: LoginInput!): AuthResponse!
-  updateUserProfile(input: UpdateUserProfileInput!): User!
-  verifyOtp(input: VerifyOtpInput!): Boolean!
-  forgotPassword(email: String!): Boolean!
-  resetPassword(input: ResetPasswordInput!): Boolean!
-  resendOtp(email: String!): Boolean!
-  createRole(name: String!): Role!
-  updateRole(id: String!, name: String!): Role!
-  deleteRole(id: String!): Role!
+  register(input: RegisterInput!): UserResponse!
+  login(input: LoginInput!): AuthResponseWrapper!
+  deleteUser(id: String!): BooleanResponse!
+  approveUser(id: String!): UserResponse!
+  verifyOtp(input: VerifyOtpInput!): BooleanResponse!
+  forgotPassword(email: String!): BooleanResponse!
+  resetPassword(input: ResetPasswordInput!): BooleanResponse!
+  resendOtp(email: String!): BooleanResponse!
+  getUserById(id: String!): UserResponse!
+  updateUserProfile(input: UpdateUserProfileInput!): UserResponse!
+  createRole(name: String!): RoleResponse!
+  updateRole(id: String!, name: String!): RoleResponse!
+  deleteRole(id: String!): BooleanResponse!
+  createPermission(name: String!): PermissionResponse!
+  assignPermission(roleId: String!, permissionId: String!): BooleanResponse!
+  removePermission(roleId: String!, permissionId: String!): BooleanResponse!
+  createShop(input: CreateShopInput!): ShopResponse!
+  updateShopById(input: UpdateShopInput!): ShopResponse!
+  deleteShopById(id: String!): BooleanResponse!
+  createCategory(input: CreateCategoryInput!): Category!
+  updateCategory(input: UpdateCategoryInput!): Category!
+  deleteCategory(id: String!): Boolean!
+  createSubCategory(input: CreateSubCategoryInput!): SubCategory!
+  updateSubCategory(input: UpdateSubCategoryInput!): SubCategory!
+  deleteSubCategory(id: String!): SubCategory!
 }
 
 input RegisterInput {
@@ -70,13 +267,6 @@ input LoginInput {
   password: String!
 }
 
-input UpdateUserProfileInput {
-  firstName: String
-  lastName: String
-  mobile: String
-  password: String
-}
-
 input VerifyOtpInput {
   email: String!
   otp: String!
@@ -86,4 +276,85 @@ input ResetPasswordInput {
   email: String!
   otp: String!
   newPassword: String!
+}
+
+input UpdateUserProfileInput {
+  firstName: String
+  lastName: String
+  mobile: String
+  password: String
+}
+
+input CreateShopInput {
+  shopName: String!
+  addressLine1: String!
+  addressLine2: String
+  city: String!
+  state: String!
+  pinCode: String!
+  country: String
+  pickupAddress: String
+  gstNumber: String!
+  panNumber: String!
+  businessRegistrationNumber: String
+  fssaiNumber: String
+  accountHolderName: String!
+  accountNumber: String!
+  ifscCode: String!
+  bankName: String!
+  cancelledChequeImage: String
+  alternatePhone: String
+  whatsappNumber: String
+  websiteUrl: String
+  instagram: String
+  facebook: String
+  shopLicense: String
+}
+
+input UpdateShopInput {
+  id: String!
+  shopName: String
+  addressLine1: String
+  addressLine2: String
+  city: String
+  state: String
+  pinCode: String
+  country: String
+  pickupAddress: String
+  gstNumber: String
+  panNumber: String
+  businessRegistrationNumber: String
+  fssaiNumber: String
+  accountHolderName: String
+  accountNumber: String
+  ifscCode: String
+  bankName: String
+  cancelledChequeImage: String
+  alternatePhone: String
+  whatsappNumber: String
+  websiteUrl: String
+  instagram: String
+  facebook: String
+  shopLicense: String
+}
+
+input CreateCategoryInput {
+  name: String!
+  description: String
+}
+
+input UpdateCategoryInput {
+  id: String!
+  name: String!
+  description: String
+}
+
+input CreateSubCategoryInput {
+  name: String!
+  categoryId: String!
+}
+
+input UpdateSubCategoryInput {
+  id: String!
+  name: String!
 }

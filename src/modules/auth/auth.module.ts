@@ -10,9 +10,8 @@ import { Permission } from '../permission/entity/permission.entity';
 import { Otp } from '../otp/entity/otp.entity';
 import { AuthService } from './auth.service';
 import { AuthResolver } from './auth.resolver';
+import { QueueModule } from '../../common/queues/queue.module';
 import { JwtStrategy } from '../../common/strategies/jwt.strategy';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { MailService } from '../../common/mail/mail.service';
 
 @Module({
   imports: [
@@ -29,7 +28,9 @@ import { MailService } from '../../common/mail/mail.service';
         },
       }),
     }),
+    QueueModule,
   ],
-  providers: [AuthService, AuthResolver, JwtStrategy, JwtAuthGuard, MailService],
+  providers: [AuthService, AuthResolver, JwtStrategy],
+  exports: [AuthService, PassportModule],
 })
 export class AuthModule {}
