@@ -929,4 +929,78 @@ mutation UpdateProduct {
 mutation DeleteProduct {
   deleteProduct(id: "PRODUCT_ID_HERE")
 }
-````
+```
+
+## Media Management APIs
+
+### 36) Upload Media
+
+**Requires Authentication:** Yes (JWT Token Required)
+
+**Note:** This API accepts a local file path and uploads it to Cloudinary. The service will validate the file, check size and format before uploading.
+
+**Simple Upload Example:**
+```graphql
+mutation {
+  uploadMedia(filePath: "/home/user/downloads/image.jpg") {
+    url
+    publicId
+    type
+    originalName
+    size
+    format
+    sourceUrl
+  }
+}
+```
+
+**With Variables:**
+```graphql
+mutation UploadMedia($filePath: String!) {
+  uploadMedia(filePath: $filePath) {
+    url
+    publicId
+    type
+    originalName
+    size
+    format
+    sourceUrl
+  }
+}
+```
+
+Variables:
+```json
+{
+  "filePath": "/home/user/downloads/image.jpg"
+}
+```
+
+**Your Example:**
+```graphql
+mutation {
+  uploadMedia(filePath: "/home/wappnet-95/Downloads/download (1).jpeg") {
+    url
+    publicId
+    type
+    originalName
+    size
+    format
+    sourceUrl
+  }
+}
+```
+
+**Supported File Types:**
+- Images: jpg, jpeg, png, gif, webp, svg (Max: 5MB)
+- Videos: mp4, avi, mov, wmv, flv, webm (Max: 100MB)
+- PDF files (Max: 10MB)
+
+### 37) Delete Media
+
+**Simple Delete Example:**
+```graphql
+mutation {
+  deleteFile(url: "https://res.cloudinary.com/your-cloud-name/image/upload/v1/media/abc123.jpg")
+}
+```

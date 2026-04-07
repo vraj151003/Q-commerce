@@ -27,7 +27,6 @@ export class UserSeed {
     if (!adminRole) {
       adminRole = this.roleRepo.create({ name: 'admin' });
       adminRole = await this.roleRepo.save(adminRole);
-      console.log('Created admin role');
     }
 
     // Assign all permissions to admin role
@@ -35,9 +34,6 @@ export class UserSeed {
     if (allPermissions.length > 0) {
       adminRole.permissions = allPermissions;
       await this.roleRepo.save(adminRole);
-      console.log(
-        `Assigned ${allPermissions.length} permissions to admin role`,
-      );
     }
 
     // Check if admin user already exists
@@ -61,11 +57,8 @@ export class UserSeed {
       });
 
       await this.userRepo.save(adminUser);
-      console.log('Created admin user: vraj@yopmail.com');
     } else {
-      console.log('Admin user already exists: vraj@yopmail.com');
     }
 
-    console.log('User seeding completed!');
   }
 }

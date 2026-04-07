@@ -181,6 +181,44 @@ type Category {
   subCategories: [SubCategory!]
 }
 
+type Product {
+  id: String!
+  name: String!
+  description: String
+  longDescription: String
+  mrp: Float!
+  sellingPrice: Float!
+  discountPercentage: Float
+  stockQuantity: Float!
+  isAvailable: Boolean!
+  lowStockThreshold: Float
+  unit: String!
+  unitValue: Float
+  packSize: String
+  brand: String
+  isVeg: Boolean!
+  expiryDays: Float
+  images: [String!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  shopId: String
+  categoryId: String
+  subCategoryId: String
+  shop: Shop
+  category: Category
+  subCategory: SubCategory
+}
+
+type UploadResponse {
+  url: String!
+  publicId: String!
+  type: String!
+  originalName: String
+  size: Float
+  format: String
+  sourceUrl: String
+}
+
 type Query {
   admin_getQueueStatus: QueueStatusResponse!
   admin_clearQueue: BooleanResponse!
@@ -196,6 +234,8 @@ type Query {
   getCategory(id: String!): Category!
   getSubCategories: [SubCategory!]!
   getSubCategory(id: String!): SubCategory!
+  getProducts: [Product!]!
+  getProduct(id: String!): Product!
 }
 
 input GetAllUsersInput {
@@ -252,6 +292,11 @@ type Mutation {
   createSubCategory(input: CreateSubCategoryInput!): SubCategory!
   updateSubCategory(input: UpdateSubCategoryInput!): SubCategory!
   deleteSubCategory(id: String!): SubCategory!
+  createProduct(input: CreateProductInput!): Product!
+  updateProduct(input: UpdateProductInput!): Product!
+  deleteProduct(id: String!): Boolean!
+  uploadMedia(filePath: String!): UploadResponse!
+  deleteFile(url: String!): String!
 }
 
 input RegisterInput {
@@ -358,4 +403,49 @@ input CreateSubCategoryInput {
 input UpdateSubCategoryInput {
   id: String!
   name: String!
+}
+
+input CreateProductInput {
+  name: String!
+  description: String
+  longDescription: String
+  mrp: Float!
+  sellingPrice: Float!
+  discountPercentage: Float
+  stockQuantity: Float!
+  isAvailable: Boolean! = true
+  lowStockThreshold: Float
+  unit: String!
+  unitValue: Float
+  packSize: String
+  brand: String
+  isVeg: Boolean!
+  expiryDays: Float
+  images: [String!]
+  shopId: String
+  categoryId: String
+  subCategoryId: String
+}
+
+input UpdateProductInput {
+  id: String!
+  name: String
+  description: String
+  longDescription: String
+  mrp: Float
+  sellingPrice: Float
+  discountPercentage: Float
+  stockQuantity: Float
+  isAvailable: Boolean
+  lowStockThreshold: Float
+  unit: String
+  unitValue: Float
+  packSize: String
+  brand: String
+  isVeg: Boolean
+  expiryDays: Float
+  images: [String!]
+  shopId: String
+  categoryId: String
+  subCategoryId: String
 }

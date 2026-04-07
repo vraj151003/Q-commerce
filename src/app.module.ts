@@ -16,6 +16,8 @@ import { UsersModule } from './modules/users/users.module';
 import { ShopModule } from './modules/shop/shop.module';
 import { CategoryModule } from './modules/category/category.module';
 import { SubCategoryModule } from './modules/subcategory/subcategory.module';
+import { ProductModule } from './modules/products/product.module';
+import { MediaModule } from './modules/media/media.module';
 
 @Module({
   imports: [
@@ -30,6 +32,10 @@ import { SubCategoryModule } from './modules/subcategory/subcategory.module';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       playground: true,
       context: ({ req }) => ({ req }),
+      installSubscriptionHandlers: true,
+      buildSchemaOptions: {
+        dateScalarMode: 'isoDate',
+      },
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -54,6 +60,8 @@ import { SubCategoryModule } from './modules/subcategory/subcategory.module';
     ShopModule,
     CategoryModule,
     SubCategoryModule,
+    ProductModule,
+    MediaModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],

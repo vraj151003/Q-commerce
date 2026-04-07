@@ -20,4 +20,7 @@ export default registerAs('database', () => ({
     process.env.MAIL_FROM || process.env.EMAIL || process.env.MAIL_USER || '',
   redis_host: process.env.REDIS_HOST || 'localhost',
   redis_port: parseInt(process.env.REDIS_PORT || '6379', 10),
+  cloudinary_cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
+  cloudinary_api_key: process.env.CLOUDINARY_API_KEY || '',
+  cloudinary_api_secret: process.env.CLOUDINARY_API_SECRET || '',
 }));

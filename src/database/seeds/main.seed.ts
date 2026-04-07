@@ -9,10 +9,8 @@ async function runSeeds() {
   const permissionSeed = app.get(PermissionSeed);
   const userSeed = app.get(UserSeed);
 
-  console.log('Running permission seeds...');
   await permissionSeed.run();
 
-  console.log('Running user seeds...');
   await userSeed.run();
 
   await app.close();
