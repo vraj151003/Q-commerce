@@ -29,6 +29,7 @@ export class PermissionSeed {
       { name: 'UPDATE_PRODUCT' },
       { name: 'DELETE_PRODUCT' },
       { name: 'CREATE_CATEGORY' },
+      { name: 'CART' },
       { name: 'READ_CATEGORY' },
       { name: 'UPDATE_CATEGORY' },
       { name: 'DELETE_CATEGORY' },
@@ -48,7 +49,6 @@ export class PermissionSeed {
       if (!existingPermission) {
         const newPermission = this.permissionRepo.create(permission);
         await this.permissionRepo.save(newPermission);
-      } else {
       }
     }
   }

@@ -219,6 +219,43 @@ type UploadResponse {
   sourceUrl: String
 }
 
+type CartItem {
+  id: ID!
+  quantity: Float!
+  price: Float!
+  totalPrice: Float!
+  productId: String!
+}
+
+type Cart {
+  id: ID!
+  totalAmount: Float!
+  totalItems: Float!
+  isActive: Boolean!
+  user: User!
+  items: [CartItem!]
+}
+
+type OrderItem {
+  id: ID!
+  quantity: Float!
+  price: Float!
+  totalPrice: Float!
+  productId: String!
+}
+
+type Order {
+  id: ID!
+  totalAmount: Float!
+  deliveryCharge: Float!
+  totalItems: Float!
+  status: String!
+  paymentMethod: String
+  paymentStatus: String!
+  user: User!
+  items: [OrderItem!]!
+}
+
 type Query {
   admin_getQueueStatus: QueueStatusResponse!
   admin_clearQueue: BooleanResponse!
@@ -236,6 +273,11 @@ type Query {
   getSubCategory(id: String!): SubCategory!
   getProducts: [Product!]!
   getProduct(id: String!): Product!
+  getCart: Cart!
+  getOrders: [Order!]!
+  getMyOrders: [Order!]!
+  getOrder(id: String!): Order!
+  getSellerOrders: [Order!]!
 }
 
 input GetAllUsersInput {
@@ -297,6 +339,13 @@ type Mutation {
   deleteProduct(id: String!): Boolean!
   uploadMedia(filePath: String!): UploadResponse!
   deleteFile(url: String!): String!
+  addToCart(input: AddToCartInput!): Cart!
+  updateCartItem(productId: String!, quantity: Float!): Cart!
+  removeCartItem(itemId: Float!): Cart!
+  clearCart: Boolean!
+  createOrder(input: CreateOrderInput!): Order!
+  updateOrderStatus(input: UpdateOrderStatusInput!): Order!
+  updateOrder(id: String!, data: CreateOrderInput!): Order!
 }
 
 input RegisterInput {
@@ -448,4 +497,24 @@ input UpdateProductInput {
   shopId: String
   categoryId: String
   subCategoryId: String
+}
+
+input AddToCartInput {
+  productId: String!
+  quantity: Float!
+  price: Float!
+}
+
+input CreateOrderInput {
+  addressLine1: String!
+  addressLine2: String
+  city: String!
+  state: String!
+  country: String!
+  pincode: String!
+}
+
+input UpdateOrderStatusInput {
+  orderId: String!
+  status: String!
 }

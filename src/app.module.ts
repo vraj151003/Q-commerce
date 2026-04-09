@@ -18,6 +18,8 @@ import { CategoryModule } from './modules/category/category.module';
 import { SubCategoryModule } from './modules/subcategory/subcategory.module';
 import { ProductModule } from './modules/products/product.module';
 import { MediaModule } from './modules/media/media.module';
+import { CartModule } from './modules/cart/cart.module';
+import { OrderModule } from './modules/orders/order.module';
 
 @Module({
   imports: [
@@ -62,6 +64,8 @@ import { MediaModule } from './modules/media/media.module';
     SubCategoryModule,
     ProductModule,
     MediaModule,
+    CartModule,
+    OrderModule
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],

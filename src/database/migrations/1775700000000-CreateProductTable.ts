@@ -29,9 +29,9 @@ export class CreateProductTable1775700000000 implements MigrationInterface {
         "categoryId" uuid,
         "subCategoryId" uuid,
         CONSTRAINT "PK_product_id" PRIMARY KEY ("id"),
-        CONSTRAINT "FK_product_shopId" FOREIGN KEY ("shopId") REFERENCES "shop" ("id") ON DELETE CASCADE,
-        CONSTRAINT "FK_product_categoryId" FOREIGN KEY ("categoryId") REFERENCES "category" ("id") ON DELETE SET NULL,
-        CONSTRAINT "FK_product_subCategoryId" FOREIGN KEY ("subCategoryId") REFERENCES "sub_category" ("id") ON DELETE SET NULL
+        CONSTRAINT "FK_product_shopId" FOREIGN KEY ("shopId") REFERENCES "shops" ("id") ON DELETE CASCADE,
+        CONSTRAINT "FK_product_categoryId" FOREIGN KEY ("categoryId") REFERENCES "categories" ("id") ON DELETE SET NULL,
+        CONSTRAINT "FK_product_subCategoryId" FOREIGN KEY ("subCategoryId") REFERENCES "subcategories" ("id") ON DELETE SET NULL
       )
     `);
 
