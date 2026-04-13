@@ -20,7 +20,7 @@ export class MailService {
 
     await this.mailerService.sendMail({
       to: email,
-      from: `"SwiftMart Support" <${this.configService.get<string>('database.mail_from')}>`,
+      from: `"SwiftMart Support" <${this.configService.get<string>('mail.from')}>`,
       subject: 'Verify Your SwiftMart Account - OTP Code',
       text: `Your SwiftMart OTP is ${otp}. It is valid for 5 minutes.`,
       html: `
@@ -83,7 +83,7 @@ export class MailService {
 
     await this.mailerService.sendMail({
       to: email,
-      from: `"SwiftMart Support" <${this.configService.get<string>('database.mail_from')}>`,
+      from: `"SwiftMart Support" <${this.configService.get<string>('mail.from')}>`,
       subject: 'Reset Your SwiftMart Password - OTP Code',
       text: `Your SwiftMart password reset OTP is ${otp}. It is valid for 5 minutes.`,
       html: `

@@ -10,17 +10,16 @@ import { MailService } from './mail.service';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         transport: {
-          host:
-            configService.get<string>('database.mail_host') || 'smtp.gmail.com',
-          port: configService.get<number>('database.mail_port') || 587,
-          secure: configService.get<boolean>('database.mail_secure') || false,
+          host: configService.get<string>('mail.host') || 'smtp.gmail.com',
+          port: configService.get<number>('mail.port') || 587,
+          secure: configService.get<boolean>('mail.secure') || false,
           auth: {
-            user: configService.get<string>('database.email'),
-            pass: configService.get<string>('database.email_password'),
+            user: configService.get<string>('mail.user'),
+            pass: configService.get<string>('mail.password'),
           },
         },
         defaults: {
-          from: `"SwiftMart Support" <${configService.get<string>('database.mail_from')}>`,
+          from: `"SwiftMart Support" <${configService.get<string>('mail.from')}>`,
         },
       }),
     }),

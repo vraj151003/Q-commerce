@@ -119,4 +119,15 @@ export class PermissionService {
     }
     return role?.permissions;
   }
+
+  async updatePermission(id: string, name: string) {
+    const permission = await this.permissionRepo.findOne({ where: { id } });
+    
+    if (!permission) {
+      throw new BadRequestException('Permission not found');
+    }
+    
+    permission.name = name;
+    return this.permissionRepo.save(permission);
+  }
 }

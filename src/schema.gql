@@ -250,10 +250,25 @@ type Order {
   deliveryCharge: Float!
   totalItems: Float!
   status: String!
-  paymentMethod: Float
-  paymentStatus: Float!
+  paymentMethod: paymentMethod
+  paymentStatus: PaymentStatus!
   user: User!
   items: [OrderItem!]!
+}
+
+"""Available payment methods for orders"""
+enum paymentMethod {
+  CASH_ON_DELIVERY
+  ONLINE_PAYMENT
+}
+
+"""Payment status for orders"""
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
 }
 
 type DeliveryProfile {
@@ -344,6 +359,7 @@ type Mutation {
   updateRole(id: String!, name: String!): RoleResponse!
   deleteRole(id: String!): BooleanResponse!
   createPermission(name: String!): PermissionResponse!
+  updatePermission(id: String!, name: String!): PermissionResponse!
   assignPermission(roleId: String!, permissionId: String!): BooleanResponse!
   removePermission(roleId: String!, permissionId: String!): BooleanResponse!
   createShop(input: CreateShopInput!): ShopResponse!

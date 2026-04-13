@@ -29,6 +29,17 @@ export class PermissionResolver {
     };
   }
 
+  @Mutation(() => PermissionResponse)
+  @Roles('admin')
+  updatePermission(@Args('id') id: string, @Args('name') name: string) {
+    const permission = this.permissionService.updatePermission(id, name);
+    return {
+      statusCode: 200,
+      message: 'Permission updated successfully',
+      data: permission,
+    };
+  }
+
   @Query(() => PermissionListPaginatedResponse)
   @Roles('admin')
   async getPermission(

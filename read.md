@@ -171,16 +171,21 @@ query GetAllUserProfiles {
 ```graphql
 query GetUserProfileById {
   getUserProfileById(id: "USER_ID_HERE") {
-    id
-    firstName
-    lastName
-    email
-    mobile
-    isVerified
-    adminApproved
-    createdAt
-    role {
+    statusCode
+    message
+    data {
       id
+      firstName
+      lastName
+      email
+      mobile
+      isVerified
+      adminApproved
+      createdAt
+      role {
+        id
+        name
+      }
     }
   }
 }
@@ -355,20 +360,235 @@ mutation ResendOtp {
 }
 ```
 
+## Shop Management APIs
+
+### 11) Create Shop
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Requires Role:** `admin`
+**Requires Permission:** `CREATE_SHOP`
+
+```graphql
+mutation CreateShop {
+  createShop(
+    input: {
+      shopName: "SwiftMart Electronics"
+      addressLine1: "123 Main Street"
+      addressLine2: "Floor 2, Building A"
+      city: "Mumbai"
+      state: "Maharashtra"
+      pinCode: "400001"
+      country: "India"
+      pickupAddress: "Warehouse Gate 3, Industrial Area"
+      gstNumber: "27AAAPL1234C1ZV"
+      panNumber: "AAAPL1234C"
+      businessRegistrationNumber: "U72300MH2023PTC123456"
+      fssaiNumber: "12345678901234"
+      accountHolderName: "John Doe"
+      accountNumber: "1234567890123456"
+      ifscCode: "SBIN0001234"
+      bankName: "State Bank of India"
+      cancelledChequeImage: "https://example.com/cheque.jpg"
+      alternatePhone: "9876543210"
+      whatsappNumber: "9876543210"
+      websiteUrl: "https://swiftmart.com"
+      instagram: "@swiftmart_official"
+      facebook: "SwiftMart Electronics"
+      shopLicense: "https://example.com/license.pdf"
+    }
+  ) {
+    statusCode
+    message
+    data {
+      id
+      shopName
+      addressLine1
+      addressLine2
+      city
+      state
+      pinCode
+      country
+      pickupAddress
+      gstNumber
+      panNumber
+      businessRegistrationNumber
+      fssaiNumber
+      accountHolderName
+      accountNumber
+      ifscCode
+      bankName
+      cancelledChequeImage
+      alternatePhone
+      whatsappNumber
+      websiteUrl
+      instagram
+      facebook
+      sellerId
+      createdAt
+      shopLicense
+      seller {
+        id
+        firstName
+        lastName
+        email
+      }
+    }
+  }
+}
+```
+
+### 12) Get All Shops
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Requires Permission:** `READ_SHOP`
+
+```graphql
+query GetAllShops {
+  getAllShops {
+    statusCode
+    message
+    data {
+      id
+      shopName
+      addressLine1
+      city
+      state
+      pinCode
+      country
+      gstNumber
+      accountHolderName
+      bankName
+      sellerId
+      createdAt
+      seller {
+        id
+        firstName
+        lastName
+        email
+      }
+    }
+  }
+}
+```
+
+### 13) Get Shop By ID
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Requires Permission:** `READ_SHOP`
+
+```graphql
+query GetShopById {
+  getShopbyId(id: "SHOP_ID_HERE") {
+    statusCode
+    message
+    data {
+      id
+      shopName
+      addressLine1
+      addressLine2
+      city
+      state
+      pinCode
+      country
+      pickupAddress
+      gstNumber
+      panNumber
+      businessRegistrationNumber
+      fssaiNumber
+      accountHolderName
+      accountNumber
+      ifscCode
+      bankName
+      cancelledChequeImage
+      alternatePhone
+      whatsappNumber
+      websiteUrl
+      instagram
+      facebook
+      sellerId
+      createdAt
+      shopLicense
+      seller {
+        id
+        firstName
+        lastName
+        email
+        mobile
+      }
+    }
+  }
+}
+```
+
+### 14) Update Shop
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Requires Permission:** `UPDATE_SHOP`
+
+```graphql
+mutation UpdateShop {
+  updateShopById(
+    input: {
+      id: "SHOP_ID_HERE"
+      shopName: "Updated SwiftMart Electronics"
+      addressLine1: "456 Updated Street"
+      city: "Pune"
+      state: "Maharashtra"
+      pinCode: "411001"
+      whatsappNumber: "9876543211"
+      websiteUrl: "https://updated-swiftmart.com"
+    }
+  ) {
+    statusCode
+    message
+    data {
+      id
+      shopName
+      addressLine1
+      city
+      state
+      pinCode
+      whatsappNumber
+      websiteUrl
+      createdAt
+    }
+  }
+}
+```
+
+### 15) Delete Shop
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Requires Permission:** `DELETE_SHOP`
+
+```graphql
+mutation DeleteShop {
+  deleteShopById(id: "SHOP_ID_HERE") {
+    statusCode
+    message
+    data
+  }
+}
+```
+
 ## Role Management APIs
 
 ### 11) Create Role
 
 **Requires Permission:** `CREATE_USER` (Admin functionality)
 
+```graphql
 mutation CreateRole {
-createRole(name: "admin") {
-id
-name
+  createRole(name: "admin") {
+    statusCode
+    message
+    data {
+      id
+      name
+    }
+  }
 }
-}
-
-````
+```
 
 ### 12) Get All Roles
 
@@ -438,8 +658,12 @@ query GetRole {
 ```graphql
 mutation UpdateRole {
   updateRole(id: "ROLE_ID_HERE", name: "super_admin") {
-    id
-    name
+    statusCode
+    message
+    data {
+      id
+      name
+    }
   }
 }
 ```
@@ -463,13 +687,34 @@ mutation DeleteRole {
 ```graphql
 mutation CreatePermission {
   createPermission(name: "CUSTOM_PERMISSION") {
-    id
-    name
+    statusCode
+    message
+    data {
+      id
+      name
+    }
   }
 }
 ```
 
-### 17) Get All Permissions
+### 17) Update Permission
+
+**Requires Permission:** `UPDATE_USER` (Admin functionality)
+
+```graphql
+mutation UpdatePermission {
+  updatePermission(id: "PERMISSION_ID_HERE", name: "UPDATED_PERMISSION_NAME") {
+    statusCode
+    message
+    data {
+      id
+      name
+    }
+  }
+}
+```
+
+### 18) Get All Permissions
 
 **Requires Permission:** `READ_USER` (Admin functionality)
 **Requires Authentication:** Yes (JWT Token Required)
@@ -515,8 +760,12 @@ query GetPermissions {
 ```graphql
 query GetPermissionsByRole {
   getPermissionByRole(roleId: "ROLE_ID_HERE") {
-    id
-    name
+    statusCode
+    message
+    data {
+      id
+      name
+    }
   }
 }
 ```
@@ -528,12 +777,9 @@ query GetPermissionsByRole {
 ```graphql
 mutation AssignPermission {
   assignPermission(roleId: "ROLE_ID_HERE", permissionId: "PERMISSION_ID_HERE") {
-    id
-    name
-    permissions {
-      id
-      name
-    }
+    statusCode
+    message
+    data
   }
 }
 ```
@@ -545,13 +791,9 @@ mutation AssignPermission {
 ```graphql
 mutation RemovePermission {
   removePermission(roleId: "ROLE_ID_HERE", permissionId: "PERMISSION_ID_HERE") {
-    id
-    name
-    permissions {
-      id
-      name
-    }
-}
+    statusCode
+    message
+    data
   }
 }
 ```
@@ -573,8 +815,6 @@ mutation CreateCategory {
     id
     name
     description
-    createdAt
-    updatedAt
     subCategories {
       id
       name
@@ -593,8 +833,6 @@ query GetCategories {
     id
     name
     description
-    createdAt
-    updatedAt
     subCategories {
       id
       name
@@ -613,8 +851,6 @@ query GetCategory {
     id
     name
     description
-    createdAt
-    updatedAt
     subCategories {
       id
       name
@@ -639,8 +875,10 @@ mutation UpdateCategory {
     id
     name
     description
-    createdAt
-    updatedAt
+    subCategories {
+      id
+      name
+    }
   }
 }
 ```
@@ -671,15 +909,88 @@ mutation CreateSubCategory {
   ) {
     id
     name
-    createdAt
-    updatedAt
     category {
       id
       name
+      description
     }
   }
 }
 ```
+
+### 27) Get All SubCategories
+
+**Requires Permission:** `READ_SUBCATEGORY`
+
+```graphql
+query GetSubCategories {
+  getSubCategories {
+    id
+    name
+    category {
+      id
+      name
+      description
+    }
+  }
+}
+```
+
+### 28) Get SubCategory By ID
+
+**Requires Permission:** `READ_SUBCATEGORY`
+
+```graphql
+query GetSubCategory {
+  getSubCategory(id: "SUBCATEGORY_ID_HERE") {
+    id
+    name
+    category {
+      id
+      name
+      description
+    }
+  }
+}
+```
+
+### 29) Update SubCategory
+
+**Requires Permission:** `UPDATE_SUBCATEGORY`
+
+```graphql
+mutation UpdateSubCategory {
+  updateSubCategory(
+    input: {
+      id: "SUBCATEGORY_ID_HERE"
+      name: "Updated Mobile Phones"
+    }
+  ) {
+    id
+    name
+    category {
+      id
+      name
+      description
+    }
+  }
+}
+```
+
+### 30) Delete SubCategory
+
+**Requires Permission:** `DELETE_SUBCATEGORY`
+
+```graphql
+mutation DeleteSubCategory {
+  deleteSubCategory(id: "SUBCATEGORY_ID_HERE") {
+    id
+    name
+  }
+}
+```
+
+**Note:** After deletion, the entity fields may return null. The operation confirms successful deletion.
 
 ### 27) Get All SubCategories
 
