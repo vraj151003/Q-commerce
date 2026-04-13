@@ -12,6 +12,19 @@ import { OrderResolver } from './order.resolver';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Product } from '../products/entity/product.entity';
+import { registerEnumType } from '@nestjs/graphql';
+import { paymentMethod, PaymentStatus } from 'src/common/constant/status';
+
+// Register enums for GraphQL schema
+registerEnumType(paymentMethod, {
+  name: 'paymentMethod',
+  description: 'Available payment methods for orders',
+});
+
+registerEnumType(PaymentStatus, {
+  name: 'PaymentStatus',
+  description: 'Payment status for orders',
+});
 
 @Module({
   imports: [

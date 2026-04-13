@@ -20,6 +20,7 @@ import { ProductModule } from './modules/products/product.module';
 import { MediaModule } from './modules/media/media.module';
 import { CartModule } from './modules/cart/cart.module';
 import { OrderModule } from './modules/orders/order.module';
+import { DeliveryProfileModule } from './modules/delivery-profile/delivery-profile.module';
 
 @Module({
   imports: [
@@ -65,7 +66,8 @@ import { OrderModule } from './modules/orders/order.module';
     ProductModule,
     MediaModule,
     CartModule,
-    OrderModule
+    OrderModule,
+    DeliveryProfileModule
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],

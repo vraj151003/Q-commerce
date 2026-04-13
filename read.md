@@ -1004,3 +1004,568 @@ mutation {
   deleteFile(url: "https://res.cloudinary.com/your-cloud-name/image/upload/v1/media/abc123.jpg")
 }
 ```
+
+## Cart Management APIs
+
+### 38) Get Cart
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Requires Permission:** `CART`
+
+```graphql
+query GetCart {
+  getCart {
+    id
+    totalAmount
+    totalItems
+    isActive
+    user {
+      id
+      firstName
+      lastName
+      email
+    }
+    items {
+      id
+      quantity
+      price
+      totalPrice
+      productId
+    }
+  }
+}
+```
+
+### 39) Add Item to Cart
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Requires Permission:** `CART`
+
+```graphql
+mutation AddToCart {
+  addToCart(
+    input: {
+      productId: "PRODUCT_ID_HERE"
+      quantity: 2
+      price: 999.99
+    }
+  ) {
+    id
+    totalAmount
+    totalItems
+    isActive
+    items {
+      id
+      quantity
+      price
+      totalPrice
+      productId
+    }
+  }
+}
+```
+
+**With Variables:**
+```graphql
+mutation AddToCart($input: AddToCartInput!) {
+  addToCart(input: $input) {
+    id
+    totalAmount
+    totalItems
+    isActive
+    items {
+      id
+      quantity
+      price
+      totalPrice
+      productId
+    }
+  }
+}
+```
+
+Variables:
+```json
+{
+  "input": {
+    "productId": "PRODUCT_ID_HERE",
+    "quantity": 2,
+    "price": 999.99
+  }
+}
+```
+
+### 40) Update Cart Item
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Requires Permission:** `CART`
+
+```graphql
+mutation UpdateCartItem {
+  updateCartItem(
+    productId: "PRODUCT_ID_HERE"
+    quantity: 3
+  ) {
+    id
+    totalAmount
+    totalItems
+    isActive
+    items {
+      id
+      quantity
+      price
+      totalPrice
+      productId
+    }
+  }
+}
+```
+
+### 41) Remove Cart Item
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Requires Permission:** `CART`
+
+```graphql
+mutation RemoveCartItem {
+  removeCartItem(itemId: 1) {
+    id
+    totalAmount
+    totalItems
+    isActive
+    items {
+      id
+      quantity
+      price
+      totalPrice
+      productId
+    }
+  }
+}
+```
+
+### 42) Clear Cart
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Requires Permission:** `CART`
+
+```graphql
+mutation ClearCart {
+  clearCart
+}
+```
+
+## Order Management APIs
+
+### 43) Create Order
+
+**Requires Authentication:** Yes (JWT Token Required)
+
+```graphql
+mutation CreateOrder {
+  createOrder(
+    input: {
+      addressLine1: "123 Main Street"
+      addressLine2: "Apt 4B"
+      city: "New York"
+      state: "NY"
+      country: "USA"
+      pincode: "10001"
+    }
+  ) {
+    id
+    totalAmount
+    deliveryCharge
+    totalItems
+    status
+    paymentMethod
+    paymentStatus
+    user {
+      id
+      firstName
+      lastName
+      email
+    }
+    items {
+      id
+      quantity
+      price
+      totalPrice
+      productId
+    }
+  }
+}
+```
+
+**With Variables:**
+```graphql
+mutation CreateOrder($input: CreateOrderInput!) {
+  createOrder(input: $input) {
+    id
+    totalAmount
+    deliveryCharge
+    totalItems
+    status
+    paymentMethod
+    paymentStatus
+    user {
+      id
+      firstName
+      lastName
+      email
+    }
+    items {
+      id
+      quantity
+      price
+      totalPrice
+      productId
+    }
+  }
+}
+```
+
+Variables:
+```json
+{
+  "input": {
+    "addressLine1": "123 Main Street",
+    "addressLine2": "Apt 4B",
+    "city": "New York",
+    "state": "NY",
+    "country": "USA",
+    "pincode": "10001"
+  }
+}
+```
+
+### 44) Get All Orders (Admin Only)
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Requires Role:** `admin`
+
+```graphql
+query GetAllOrders {
+  getOrders {
+    id
+    totalAmount
+    deliveryCharge
+    totalItems
+    status
+    paymentMethod
+    paymentStatus
+    user {
+      id
+      firstName
+      lastName
+      email
+    }
+    items {
+      id
+      quantity
+      price
+      totalPrice
+      productId
+    }
+  }
+}
+```
+
+### 45) Get My Orders
+
+**Requires Authentication:** Yes (JWT Token Required)
+
+```graphql
+query GetMyOrders {
+  getMyOrders {
+    id
+    totalAmount
+    deliveryCharge
+    totalItems
+    status
+    paymentMethod
+    paymentStatus
+    items {
+      id
+      quantity
+      price
+      totalPrice
+      productId
+    }
+  }
+}
+```
+
+### 46) Get Order By ID
+
+**Requires Authentication:** Yes (JWT Token Required)
+
+```graphql
+query GetOrder {
+  getOrder(id: "ORDER_ID_HERE") {
+    id
+    totalAmount
+    deliveryCharge
+    totalItems
+    status
+    paymentMethod
+    paymentStatus
+    user {
+      id
+      firstName
+      lastName
+      email
+    }
+    items {
+      id
+      quantity
+      price
+      totalPrice
+      productId
+    }
+  }
+}
+```
+
+### 47) Get Seller Orders
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Requires Role:** `seller`
+
+```graphql
+query GetSellerOrders {
+  getSellerOrders {
+    id
+    totalAmount
+    deliveryCharge
+    totalItems
+    status
+    paymentMethod
+    paymentStatus
+    user {
+      id
+      firstName
+      lastName
+      email
+    }
+    items {
+      id
+      quantity
+      price
+      totalPrice
+      productId
+    }
+  }
+}
+```
+
+### 48) Update Order Status
+
+**Requires Authentication:** Yes (JWT Token Required)
+
+```graphql
+mutation UpdateOrderStatus {
+  updateOrderStatus(
+    input: {
+      orderId: "ORDER_ID_HERE"
+      status: "CONFIRMED"
+    }
+  ) {
+    id
+    totalAmount
+    deliveryCharge
+    totalItems
+    status
+    paymentMethod
+    paymentStatus
+    user {
+      id
+      firstName
+      lastName
+      email
+    }
+    items {
+      id
+      quantity
+      price
+      totalPrice
+      productId
+    }
+  }
+}
+```
+
+**Available Order Status Values:**
+- `PENDING`
+- `CONFIRMED`
+- `PACKED`
+- `OUT_FOR_DELIVERY`
+- `DELIVERED`
+- `ASSIGNED`
+- `CANCELLED`
+
+### 49) Update Order
+
+**Requires Authentication:** Yes (JWT Token Required)
+
+```graphql
+mutation UpdateOrder {
+  updateOrder(
+    id: "ORDER_ID_HERE"
+    data: {
+      addressLine1: "456 Updated Street"
+      addressLine2: "Suite 100"
+      city: "Los Angeles"
+      state: "CA"
+      country: "USA"
+      pincode: "90001"
+    }
+  ) {
+    id
+    totalAmount
+    deliveryCharge
+    totalItems
+    status
+    paymentMethod
+    paymentStatus
+    user {
+      id
+      firstName
+      lastName
+      email
+    }
+    items {
+      id
+      quantity
+      price
+      totalPrice
+      productId
+    }
+  }
+}
+```
+
+### 50) Download Order PDF
+
+**Requires Authentication:** Yes (JWT Token Required)
+
+```graphql
+query DownloadOrderPdf {
+  downloadOrderPdf(orderId: "ORDER_ID_HERE")
+}
+```
+
+**Response:** Returns a base64 encoded string of the PDF file.
+
+## Payment Methods
+
+The following payment methods are available:
+
+- `CASH_ON_DELIVERY` (Value: 1)
+- `ONLINE_PAYMENT` (Value: 2)
+
+## Payment Status
+
+The following payment statuses are available:
+
+- `PENDING` (Value: 1)
+- `PROCESSING` (Value: 2)
+- `COMPLETED` (Value: 3)
+- `FAILED` (Value: 4)
+- `REFUNDED` (Value: 5)
+
+## Complete Order Flow Example
+
+Here's a complete example of the order flow from cart to order:
+
+### Step 1: Add items to cart
+```graphql
+mutation AddToCart {
+  addToCart(
+    input: {
+      productId: "PRODUCT_ID_1"
+      quantity: 2
+      price: 999.99
+    }
+  ) {
+    id
+    totalAmount
+    totalItems
+    items {
+      productId
+      quantity
+      price
+      totalPrice
+    }
+  }
+}
+```
+
+### Step 2: View cart
+```graphql
+query GetCart {
+  getCart {
+    id
+    totalAmount
+    totalItems
+    items {
+      productId
+      quantity
+      price
+      totalPrice
+    }
+  }
+}
+```
+
+### Step 3: Create order
+```graphql
+mutation CreateOrder {
+  createOrder(
+    input: {
+      addressLine1: "123 Main Street"
+      city: "New York"
+      state: "NY"
+      country: "USA"
+      pincode: "10001"
+    }
+  ) {
+    id
+    totalAmount
+    totalItems
+    status
+    paymentMethod
+    paymentStatus
+  }
+}
+```
+
+### Step 4: View my orders
+```graphql
+query GetMyOrders {
+  getMyOrders {
+    id
+    totalAmount
+    totalItems
+    status
+    paymentMethod
+    paymentStatus
+  }
+}
+```
+
+### Step 5: Update order status (if admin)
+```graphql
+mutation UpdateOrderStatus {
+  updateOrderStatus(
+    input: {
+      orderId: "ORDER_ID_HERE"
+      status: "CONFIRMED"
+    }
+  ) {
+    id
+    status
+    paymentStatus
+  }
+}
+```

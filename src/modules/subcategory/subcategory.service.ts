@@ -52,7 +52,6 @@ export class SubCategoryService {
 
   async deleteSubcategory(id: string) {
     const sub = await this.findOneSubcategory(id);
-    await this.subRepo.remove(sub);
-    return true;
+    return this.subRepo.remove(sub);
   }
 }

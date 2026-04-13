@@ -1,10 +1,13 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Order } from "./entity/order.entity";
 import { OrderItem } from "./entity/order-item.entity";
 import { Cart } from "../cart/entity/cart.entity";
 import { Repository } from "typeorm";
 import { CreateOrderInput } from "./dto/create-order-input";
+import * as ejs from 'ejs';
+import * as puppeteer from 'puppeteer';
+import * as path from 'path';
 
 @Injectable()
 export class OrderService {
@@ -95,5 +98,44 @@ export class OrderService {
   async updateOrder(id: string, data: any) {
     await this.orderRepo.update(id, data);
     return this.findOne(id);
+  }
+
+  async generateOrderPdfBase64(id: string) {
+    const order = await this.orderRepo.findOne({
+      where: { id },
+      relations: ['items', 'user'],
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const templatePath = path.join(
+      process.cwd(),
+      'src',
+      'modules',
+      'orders',
+      'templates',
+      'order.ejs',
+    );
+    const html = await ejs.renderFile(templatePath, { order });
+
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+
+    try {
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+      });
+
+      return Buffer.from(pdfBuffer).toString('base64');
+    } finally {
+      await browser.close();
+    }
   }
 }

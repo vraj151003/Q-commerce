@@ -11,6 +11,7 @@ import {
 import { ObjectType, Field, ID } from '@nestjs/graphql';
 import { User } from 'src/modules/users/entity/users.entity';
 import { OrderItem } from './order-item.entity';
+import { PaymentStatus, paymentMethod } from 'src/common/constant/status';
 
 
 @ObjectType()
@@ -36,13 +37,13 @@ export class Order {
   @Column({ default: 'PENDING' })
   status: string;
 
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  paymentMethod: string;
+  @Field(() => paymentMethod, { nullable: true })
+  @Column({ type: 'enum', enum: paymentMethod, nullable: true })
+  paymentMethod: paymentMethod;
 
-  @Field()
-  @Column({ default: 'PENDING' })
-  paymentStatus: string;
+  @Field(() => PaymentStatus)
+  @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.PENDING })
+  paymentStatus: PaymentStatus;
 
   @Column({ nullable: true }) addressLine1: string;
   @Column({ nullable: true }) addressLine2: string;
