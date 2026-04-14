@@ -1,1 +1,2 @@
+# Pre-commit hook to run build
 npm run build
