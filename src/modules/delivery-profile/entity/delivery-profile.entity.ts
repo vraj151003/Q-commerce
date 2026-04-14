@@ -8,7 +8,7 @@ import {
   ManyToOne,
 } from 'typeorm';
 import { ObjectType, Field, ID } from '@nestjs/graphql';
-import { User } from 'src/modules/users/entity/users.entity';
+import { User } from '../../users/entity/users.entity';
 
 @ObjectType()
 @Entity('delivery_profile')

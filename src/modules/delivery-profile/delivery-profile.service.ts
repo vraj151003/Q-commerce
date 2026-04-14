@@ -11,16 +11,22 @@ constructor(
 @InjectRepository(DeliveryProfile)
 private readonly deliveryProfileRepo : Repository<DeliveryProfile>) {}
 
-create(input : CreateDeliveryProfileInput , user : any) {
+async create(input : CreateDeliveryProfileInput , user : any) {
   const profile = this.deliveryProfileRepo.create({
     ...input,
     user : { id : user.userId}
   })
+  const savedProfile = await this.deliveryProfileRepo.save(profile);
+  return this.deliveryProfileRepo.findOne({
+    where: { id: savedProfile.id },
+    relations: ['user']
+  });
 }
 
 findAll(user : any){
   return this.deliveryProfileRepo.find({
-    where : { user : {id : user.userId}}
+    where : { user : {id : user.userId}},
+    relations: ['user']
   })
 }
 async findOne(id: string, user: any) {

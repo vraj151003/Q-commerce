@@ -1,16 +1,18 @@
-import { NotFoundException } from '@nestjs/common';
+ import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CartService } from './cart.service';
 import { Cart } from './entity/cart.entity';
 import { CartItem } from './entity/cart-item.entity';
+import { Product } from '../products/entity/product.entity';
 import { AddToCartInput } from './dto/add-item-input';
 
 describe('CartService', () => {
   let service: CartService;
   let cartRepo: Partial<Repository<Cart>>;
   let itemRepo: Partial<Repository<CartItem>>;
+  let productRepo: Partial<Repository<Product>>;
 
   const user = { userId: 'user-1' };
 
@@ -21,7 +23,9 @@ describe('CartService', () => {
     isActive: true,
     user: { id: user.userId },
     items: [],
-  } as Cart;
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  } as unknown as Cart;
 
   const mockItem = {
     id: 10,
@@ -56,12 +60,19 @@ describe('CartService', () => {
             delete: jest.fn(),
           },
         },
+        {
+          provide: getRepositoryToken(Product),
+          useValue: {
+            findOne: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<CartService>(CartService);
     cartRepo = module.get(getRepositoryToken(Cart));
     itemRepo = module.get(getRepositoryToken(CartItem));
+    productRepo = module.get(getRepositoryToken(Product));
   });
 
   afterEach(() => {
@@ -75,7 +86,7 @@ describe('CartService', () => {
 
     expect(cartRepo.findOne).toHaveBeenCalledWith({
       where: { user: { id: user.userId }, isActive: true },
-      relations: ['items'],
+      relations: ['items', 'user'],
     });
     expect(cartRepo.create).not.toHaveBeenCalled();
     expect(result).toEqual(mockCart);
@@ -108,9 +119,11 @@ describe('CartService', () => {
       totalItems: 3,
       items: [createdItem],
     } as Cart;
+    const product = { id: 'product-2', isAvailable: true, stockQuantity: 10 } as Product;
 
     jest.spyOn(service, 'getCart').mockResolvedValue(mockCart);
     jest.spyOn(service, 'recalculateCart').mockResolvedValue(updatedCart);
+    (productRepo.findOne as jest.Mock).mockResolvedValue(product);
     (itemRepo.findOne as jest.Mock).mockResolvedValue(undefined);
     (itemRepo.create as jest.Mock).mockReturnValue(createdItem);
     (itemRepo.save as jest.Mock).mockResolvedValue(createdItem);
@@ -118,7 +131,9 @@ describe('CartService', () => {
     const result = await service.addToCart(input, user);
 
     expect(itemRepo.create).toHaveBeenCalledWith({
-      ...input,
+      productId: 'product-2',
+      quantity: 3,
+      price: 15,
       totalPrice: 45,
       cart: mockCart,
     });
@@ -135,9 +150,11 @@ describe('CartService', () => {
       totalItems: 3,
       items: [{ ...existingItem, quantity: 3, totalPrice: 30 }],
     } as Cart;
+    const product = { id: 'product-1', isAvailable: true, stockQuantity: 10 } as Product;
 
     jest.spyOn(service, 'getCart').mockResolvedValue(mockCart);
     jest.spyOn(service, 'recalculateCart').mockResolvedValue(updatedCart);
+    (productRepo.findOne as jest.Mock).mockResolvedValue(product);
     (itemRepo.findOne as jest.Mock).mockResolvedValue(existingItem);
     (itemRepo.save as jest.Mock).mockResolvedValue(existingItem);
 
@@ -160,9 +177,11 @@ describe('CartService', () => {
       totalItems: 5,
       items: [{ ...existingItem, quantity: 5, totalPrice: 50 }],
     } as Cart;
+    const product = { id: 'product-1', isAvailable: true, stockQuantity: 10 } as Product;
 
     jest.spyOn(service, 'getCart').mockResolvedValue(mockCart);
     jest.spyOn(service, 'recalculateCart').mockResolvedValue(updatedCart);
+    (productRepo.findOne as jest.Mock).mockResolvedValue(product);
     (itemRepo.findOne as jest.Mock).mockResolvedValue(existingItem);
     (itemRepo.save as jest.Mock).mockResolvedValue(existingItem);
 
@@ -259,8 +278,56 @@ describe('CartService', () => {
     });
     expect(cartRepo.findOne).toHaveBeenCalledWith({
       where: { id: mockCart.id },
-      relations: ['items'],
+      relations: ['items', 'user'],
     });
     expect(result).toEqual(updatedCart);
+  });
+
+  // Stock validation test cases
+  it('should throw NotFoundException when adding item for non-existent product', async () => {
+    const input: AddToCartInput = { productId: 'non-existent', quantity: 1, price: 10 };
+    (productRepo.findOne as jest.Mock).mockResolvedValue(undefined);
+
+    await expect(service.addToCart(input, user)).rejects.toThrow(NotFoundException);
+    expect(productRepo.findOne).toHaveBeenCalledWith({ where: { id: 'non-existent' } });
+  });
+
+  it('should throw BadRequestException when adding item for unavailable product', async () => {
+    const input: AddToCartInput = { productId: 'product-1', quantity: 1, price: 10 };
+    const unavailableProduct = { id: 'product-1', isAvailable: false, stockQuantity: 10 } as Product;
+    (productRepo.findOne as jest.Mock).mockResolvedValue(unavailableProduct);
+
+    await expect(service.addToCart(input, user)).rejects.toThrow(BadRequestException);
+    expect(productRepo.findOne).toHaveBeenCalledWith({ where: { id: 'product-1' } });
+  });
+
+  it('should throw BadRequestException when requested quantity exceeds available stock on add', async () => {
+    const input: AddToCartInput = { productId: 'product-1', quantity: 15, price: 10 };
+    const product = { id: 'product-1', isAvailable: true, stockQuantity: 10 } as Product;
+    (productRepo.findOne as jest.Mock).mockResolvedValue(product);
+    jest.spyOn(service, 'getCart').mockResolvedValue(mockCart);
+    (itemRepo.findOne as jest.Mock).mockResolvedValue(undefined);
+
+    await expect(service.addToCart(input, user)).rejects.toThrow(BadRequestException);
+    expect(productRepo.findOne).toHaveBeenCalledWith({ where: { id: 'product-1' } });
+  });
+
+  it('should throw BadRequestException when requested quantity exceeds available stock on update', async () => {
+    const product = { id: 'product-1', isAvailable: true, stockQuantity: 10 } as Product;
+    (productRepo.findOne as jest.Mock).mockResolvedValue(product);
+    jest.spyOn(service, 'getCart').mockResolvedValue(mockCart);
+    (itemRepo.findOne as jest.Mock).mockResolvedValue(mockItem);
+
+    await expect(service.updateItem('product-1', 15, user)).rejects.toThrow(BadRequestException);
+    expect(productRepo.findOne).toHaveBeenCalledWith({ where: { id: 'product-1' } });
+  });
+
+  it('should throw BadRequestException when updating item for unavailable product', async () => {
+    const unavailableProduct = { id: 'product-1', isAvailable: false, stockQuantity: 10 } as Product;
+    (productRepo.findOne as jest.Mock).mockResolvedValue(unavailableProduct);
+    jest.spyOn(service, 'getCart').mockResolvedValue(mockCart);
+
+    await expect(service.updateItem('product-1', 5, user)).rejects.toThrow(BadRequestException);
+    expect(productRepo.findOne).toHaveBeenCalledWith({ where: { id: 'product-1' } });
   });
 });

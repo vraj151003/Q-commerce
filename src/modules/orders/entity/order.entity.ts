@@ -9,10 +9,13 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { ObjectType, Field, ID } from '@nestjs/graphql';
-import { User } from 'src/modules/users/entity/users.entity';
+import { User } from '../../users/entity/users.entity';
 import { OrderItem } from './order-item.entity';
-import { PaymentStatus, paymentMethod } from 'src/common/constant/status';
-
+import {
+  PaymentStatus,
+  paymentMethod,
+  OrderStatus,
+} from '../../../common/constant/status';
 
 @ObjectType()
 @Entity('order')
@@ -33,33 +36,61 @@ export class Order {
   @Column()
   totalItems: number;
 
-  @Field()
-  @Column({ default: 'PENDING' })
-  status: string;
+  @Field(() => Number)
+  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
+  status: OrderStatus;
 
-  @Field(() => paymentMethod, { nullable: true })
+  @Field(() => Number, { nullable: true })
   @Column({ type: 'enum', enum: paymentMethod, nullable: true })
   paymentMethod: paymentMethod;
 
-  @Field(() => PaymentStatus)
+  @Field(() => Number)
   @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.PENDING })
   paymentStatus: PaymentStatus;
 
-  @Column({ nullable: true }) addressLine1: string;
-  @Column({ nullable: true }) addressLine2: string;
-  @Column({ nullable: true }) city: string;
-  @Column({ nullable: true }) state: string;
-  @Column({ nullable: true }) country: string;
-  @Column({ nullable: true }) pincode: string;
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  addressLine1: string;
 
-  @Column({ type: 'numeric', nullable: true }) latitude: number;
-  @Column({ type: 'numeric', nullable: true }) longitude: number;
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  addressLine2: string;
 
-  @Column({ default: false }) isPaid: boolean;
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  city: string;
 
-  @Column({ nullable: true }) cancelReason: string;
-  @Column({ nullable: true }) cancelledAt: Date;
-  @Column({ nullable: true }) assignedAt: Date;
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  state: string;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  country: string;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  pincode: string;
+
+  @Field({ nullable: true })
+  @Column({ type: 'numeric', nullable: true })
+  latitude: number;
+
+  @Field({ nullable: true })
+  @Column({ type: 'numeric', nullable: true })
+  longitude: number;
+
+  @Column({ default: false })
+  isPaid: boolean;
+
+  @Column({ nullable: true })
+  cancelReason: string;
+
+  @Column({ nullable: true })
+  cancelledAt: Date;
+
+  @Column({ nullable: true })
+  assignedAt: Date;
 
   @ManyToOne(() => User)
   @Field(() => User)
@@ -72,6 +103,9 @@ export class Order {
   @Field(() => [OrderItem])
   items: OrderItem[];
 
-  @CreateDateColumn() createdAt: Date;
-  @UpdateDateColumn() updatedAt: Date;
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

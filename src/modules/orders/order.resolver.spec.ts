@@ -8,7 +8,7 @@ import { OrderService } from './order.service';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { registerEnumType } from '@nestjs/graphql';
-import { paymentMethod, PaymentStatus } from 'src/common/constant/status';
+import { paymentMethod, PaymentStatus, OrderStatus } from 'src/common/constant/status';
 
 // Register enums for GraphQL schema in test context
 registerEnumType(paymentMethod, {
@@ -25,7 +25,7 @@ const mockOrder = {
   id: 'order-id',
   totalAmount: 100,
   totalItems: 2,
-  status: 'PENDING',
+  status: OrderStatus.PENDING,
 };
 
 const mockOrderList = [mockOrder];
@@ -117,7 +117,7 @@ describe('OrderResolver (feature)', () => {
       { userId: 'user-id', role: 'admin' },
       expect.objectContaining({ addressLine1: '123 Main St', city: 'Town' }),
     );
-    expect(response.body.data.createOrder).toEqual({ id: 'order-id', totalAmount: 100, status: 'PENDING' });
+    expect(response.body.data.createOrder).toEqual({ id: 'order-id', totalAmount: 100, status: OrderStatus.PENDING });
   });
 
   it('should fail validation when createOrder input misses required field', async () => {

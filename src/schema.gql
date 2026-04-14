@@ -154,20 +154,6 @@ type PermissionListPaginatedResponse {
   data: PaginatedPermissionsResponse
 }
 
-type PaginatedUsersResponse {
-  users: [User!]!
-  total: Int!
-  page: Int!
-  limit: Int!
-  totalPages: Int!
-}
-
-type UserListPaginatedResponse {
-  statusCode: Float!
-  message: String!
-  data: PaginatedUsersResponse
-}
-
 type SubCategory {
   id: ID!
   name: String!
@@ -207,6 +193,38 @@ type Product {
   shop: Shop
   category: Category
   subCategory: SubCategory
+}
+
+type DeliveryProfile {
+  id: ID!
+  vehicleType: String!
+  vehicleName: String!
+  rcBookPhoto: String!
+  licensePhoto: String!
+  addressLine1: String!
+  addressLine2: String
+  city: String!
+  state: String!
+  pincode: String!
+  location: String
+  latitude: Float!
+  longitude: Float!
+  isAvailable: Boolean!
+  user: User!
+}
+
+type PaginatedUsersResponse {
+  users: [User!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+}
+
+type UserListPaginatedResponse {
+  statusCode: Float!
+  message: String!
+  data: PaginatedUsersResponse
 }
 
 type UploadResponse {
@@ -249,44 +267,31 @@ type Order {
   totalAmount: Float!
   deliveryCharge: Float!
   totalItems: Float!
-  status: String!
-  paymentMethod: paymentMethod
-  paymentStatus: PaymentStatus!
+  status: Float!
+  paymentMethod: Float
+  paymentStatus: Float!
+  addressLine1: String
+  addressLine2: String
+  city: String
+  state: String
+  country: String
+  pincode: String
+  latitude: Float
+  longitude: Float
   user: User!
   items: [OrderItem!]!
 }
 
-"""Available payment methods for orders"""
-enum paymentMethod {
-  CASH_ON_DELIVERY
-  ONLINE_PAYMENT
-}
-
-"""Payment status for orders"""
-enum PaymentStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-  REFUNDED
-}
-
-type DeliveryProfile {
+type DeliveryAssignment {
   id: ID!
-  vehicleType: String!
-  vehicleName: String!
-  rcBookPhoto: String!
-  licensePhoto: String!
-  addressLine1: String!
-  addressLine2: String
-  city: String!
-  state: String!
-  pincode: String!
-  location: String
-  latitude: Float!
-  longitude: Float!
-  isAvailable: Boolean!
-  user: User!
+  order: Order!
+  deliveryProfile: DeliveryProfile!
+  status: Float!
+  distance: Float
+  respondedAt: DateTime
+  retryCount: Float!
+  assignedAt: DateTime!
+  expiresAt: DateTime!
 }
 
 type Query {
@@ -312,6 +317,8 @@ type Query {
   getOrder(id: String!): Order!
   downloadOrderPdf(orderId: String!): String!
   getSellerOrders: [Order!]!
+  getMyAssignments: [DeliveryAssignment!]!
+  getPendingAssignment(orderId: String!): DeliveryAssignment
   getDeliveryProfiles: [DeliveryProfile!]!
   getDeliveryProfile(id: String!): DeliveryProfile!
 }
@@ -382,7 +389,10 @@ type Mutation {
   clearCart: Boolean!
   createOrder(input: CreateOrderInput!): Order!
   updateOrderStatus(input: UpdateOrderStatusInput!): Order!
+  cancelOrder(id: String!, cancelReason: String): Order!
   updateOrder(id: String!, data: CreateOrderInput!): Order!
+  acceptDelivery(input: AcceptDeliveryInput!): DeliveryAssignment!
+  rejectDelivery(input: RejectDeliveryInput!): DeliveryAssignment!
   createDeliveryProfile(input: CreateDeliveryProfileInput!): DeliveryProfile!
   updateDeliveryProfile(input: UpdateDeliveryProfileInput!): DeliveryProfile!
 }
@@ -551,11 +561,22 @@ input CreateOrderInput {
   state: String!
   country: String!
   pincode: String!
+  latitude: Float
+  longitude: Float
 }
 
 input UpdateOrderStatusInput {
   orderId: String!
-  status: String!
+  status: Float!
+}
+
+input AcceptDeliveryInput {
+  assignmentId: String!
+}
+
+input RejectDeliveryInput {
+  assignmentId: String!
+  reason: String
 }
 
 input CreateDeliveryProfileInput {

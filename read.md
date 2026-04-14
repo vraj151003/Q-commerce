@@ -1376,36 +1376,6 @@ mutation AddToCart {
 }
 ```
 
-**With Variables:**
-```graphql
-mutation AddToCart($input: AddToCartInput!) {
-  addToCart(input: $input) {
-    id
-    totalAmount
-    totalItems
-    isActive
-    items {
-      id
-      quantity
-      price
-      totalPrice
-      productId
-    }
-  }
-}
-```
-
-Variables:
-```json
-{
-  "input": {
-    "productId": "PRODUCT_ID_HERE",
-    "quantity": 2,
-    "price": 999.99
-  }
-}
-```
-
 ### 40) Update Cart Item
 
 **Requires Authentication:** Yes (JWT Token Required)
@@ -1482,6 +1452,8 @@ mutation CreateOrder {
       state: "NY"
       country: "USA"
       pincode: "10001"
+      latitude: 40.7128
+      longitude: -74.0060
     }
   ) {
     id
@@ -1491,6 +1463,8 @@ mutation CreateOrder {
     status
     paymentMethod
     paymentStatus
+    latitude
+    longitude
     user {
       id
       firstName
@@ -1504,48 +1478,6 @@ mutation CreateOrder {
       totalPrice
       productId
     }
-  }
-}
-```
-
-**With Variables:**
-```graphql
-mutation CreateOrder($input: CreateOrderInput!) {
-  createOrder(input: $input) {
-    id
-    totalAmount
-    deliveryCharge
-    totalItems
-    status
-    paymentMethod
-    paymentStatus
-    user {
-      id
-      firstName
-      lastName
-      email
-    }
-    items {
-      id
-      quantity
-      price
-      totalPrice
-      productId
-    }
-  }
-}
-```
-
-Variables:
-```json
-{
-  "input": {
-    "addressLine1": "123 Main Street",
-    "addressLine2": "Apt 4B",
-    "city": "New York",
-    "state": "NY",
-    "country": "USA",
-    "pincode": "10001"
   }
 }
 ```
@@ -1706,15 +1638,6 @@ mutation UpdateOrderStatus {
 }
 ```
 
-**Available Order Status Values:**
-- `PENDING`
-- `CONFIRMED`
-- `PACKED`
-- `OUT_FOR_DELIVERY`
-- `DELIVERED`
-- `ASSIGNED`
-- `CANCELLED`
-
 ### 49) Update Order
 
 **Requires Authentication:** Yes (JWT Token Required)
@@ -1767,23 +1690,6 @@ query DownloadOrderPdf {
 ```
 
 **Response:** Returns a base64 encoded string of the PDF file.
-
-## Payment Methods
-
-The following payment methods are available:
-
-- `CASH_ON_DELIVERY` (Value: 1)
-- `ONLINE_PAYMENT` (Value: 2)
-
-## Payment Status
-
-The following payment statuses are available:
-
-- `PENDING` (Value: 1)
-- `PROCESSING` (Value: 2)
-- `COMPLETED` (Value: 3)
-- `FAILED` (Value: 4)
-- `REFUNDED` (Value: 5)
 
 ## Complete Order Flow Example
 
@@ -1871,12 +1777,416 @@ mutation UpdateOrderStatus {
   updateOrderStatus(
     input: {
       orderId: "ORDER_ID_HERE"
-      status: "CONFIRMED"
+      status: 2
     }
   ) {
     id
     status
     paymentStatus
+  }
+}
+```
+
+## Delivery Profile API
+
+### 50) Create Delivery Profile
+
+**Mutation:**
+```graphql
+mutation CreateDeliveryProfile {
+  createDeliveryProfile(
+    input: {
+      vehicleType: "BIKE"
+      vehicleName: "Honda Shine"
+      rcBookPhoto: "https://example.com/rc-book.jpg"
+      licensePhoto: "https://example.com/license.jpg"
+      addressLine1: "123 Main Street"
+      addressLine2: "Apt 4B"
+      city: "Mumbai"
+      state: "Maharashtra"
+      pincode: "400001"
+      location: "Bandra West"
+      latitude: 19.0760
+      longitude: 72.8777
+    }
+  ) {
+    id
+    vehicleType
+    vehicleName
+    rcBookPhoto
+    licensePhoto
+    addressLine1
+    addressLine2
+    city
+    state
+    pincode
+    location
+    latitude
+    longitude
+    isAvailable
+    user {
+      id
+      firstName
+      lastName
+      email
+    }
+  }
+}
+```
+
+### 51) Get All Delivery Profiles
+
+**Query:**
+```graphql
+query GetDeliveryProfiles {
+  getDeliveryProfiles {
+    id
+    vehicleType
+    vehicleName
+    rcBookPhoto
+    licensePhoto
+    addressLine1
+    addressLine2
+    city
+    state
+    pincode
+    location
+    latitude
+    longitude
+    isAvailable
+    user {
+      id
+      firstName
+      lastName
+      email
+    }
+  }
+}
+```
+
+### 52) Get Delivery Profile by ID
+
+**Query:**
+```graphql
+query GetDeliveryProfile {
+  getDeliveryProfile(id: "PROFILE_ID_HERE") {
+    id
+    vehicleType
+    vehicleName
+    rcBookPhoto
+    licensePhoto
+    addressLine1
+    addressLine2
+    city
+    state
+    pincode
+    location
+    latitude
+    longitude
+    isAvailable
+    user {
+      id
+      firstName
+      lastName
+      email
+    }
+  }
+}
+```
+
+### 53) Update Delivery Profile
+
+**Mutation:**
+```graphql
+mutation UpdateDeliveryProfile {
+  updateDeliveryProfile(
+    input: {
+      id: "PROFILE_ID_HERE"
+      vehicleType: "SCOOTER"
+      vehicleName: "Honda Activa"
+      rcBookPhoto: "https://example.com/new-rc-book.jpg"
+      licensePhoto: "https://example.com/new-license.jpg"
+      addressLine1: "456 New Street"
+      addressLine2: "Building 2"
+      city: "Pune"
+      state: "Maharashtra"
+      pincode: "411001"
+      location: "Koregaon Park"
+      latitude: 18.5204
+      longitude: 73.8567
+      isAvailable: true
+    }
+  ) {
+    id
+    vehicleType
+    vehicleName
+    rcBookPhoto
+    licensePhoto
+    addressLine1
+    addressLine2
+    city
+    state
+    pincode
+    location
+    latitude
+    longitude
+    isAvailable
+    user {
+      id
+      firstName
+      lastName
+      email
+    }
+  }
+}
+```
+
+## Complete Delivery Profile Flow Example
+
+Here's a complete example of the delivery profile management flow:
+
+### Step 1: Create a delivery profile
+```graphql
+mutation CreateDeliveryProfile {
+  createDeliveryProfile(
+    input: {
+       : "BIKE"
+      vehicleName: "Honda Shine"
+      rcBookPhoto: "https://example.com/rc-book.jpg"
+      licensePhoto: "https://example.com/license.jpg"
+      addressLine1: "123 Main Street"
+      city: "Mumbai"
+      state: "Maharashtra"
+      pincode: "400001"
+      latitude: 19.0760
+      longitude: 72.8777
+    }
+  ) {
+    id
+    vehicleType
+    vehicleName
+    isAvailable
+  }
+}
+```
+
+### Step 2: View all delivery profiles
+```graphql
+query GetDeliveryProfiles {
+  getDeliveryProfiles {
+    id
+    vehicleType
+    vehicleName
+    city
+    state
+    isAvailable
+  }
+}
+```
+
+### Step 3: Update availability status
+```graphql
+mutation UpdateDeliveryProfile {
+  updateDeliveryProfile(
+    input: {
+      id: "PROFILE_ID_HERE"
+      isAvailable: false
+    }
+  ) {
+    id
+    vehicleType
+    isAvailable
+  }
+}
+```
+
+## Delivery Assignment API
+
+### 54) Accept Delivery Assignment
+
+**Mutation:**
+```graphql
+mutation AcceptDelivery {
+  acceptDelivery(
+    input: {
+      assignmentId: "ASSIGNMENT_ID_HERE"
+    }
+  ) {
+    id
+    status
+    distance
+    assignedAt
+    respondedAt
+    order {
+      id
+      totalAmount
+      status
+      deliveryPersonId
+    }
+    deliveryProfile {
+      id
+      vehicleType
+      vehicleName
+      isAvailable
+    }
+  }
+}
+```
+
+### 55) Reject Delivery Assignment
+
+**Mutation:**
+```graphql
+mutation RejectDelivery {
+  rejectDelivery(
+    input: {
+      assignmentId: "ASSIGNMENT_ID_HERE"
+      reason: "Not available"
+    }
+  ) {
+    id
+    status
+    distance
+    assignedAt
+    respondedAt
+    order {
+      id
+      totalAmount
+      status
+    }
+    deliveryProfile {
+      id
+      vehicleType
+      vehicleName
+    }
+  }
+}
+```
+
+### 56) Get My Delivery Assignments
+
+**Query:**
+```graphql
+query GetMyAssignments {
+  getMyAssignments {
+    id
+    status
+    distance
+    assignedAt
+    expiresAt
+    respondedAt
+    retryCount
+    order {
+      id
+      totalAmount
+      totalItems
+      status
+      addressLine1
+      city
+      state
+      pincode
+      latitude
+      longitude
+    }
+    deliveryProfile {
+      id
+      vehicleType
+      vehicleName
+    }
+  }
+}
+```
+
+### 57) Get Pending Assignment for Order.
+
+**Query:**
+```graphql
+query GetPendingAssignment {
+  getPendingAssignment(orderId: "ORDER_ID_HERE") {
+    id
+    status
+    distance
+    assignedAt
+    expiresAt
+    order {
+      id
+      totalAmount
+      status
+      addressLine1
+      city
+      state
+    }
+    deliveryProfile {
+      id
+      vehicleType
+      vehicleName
+    }
+  }
+}
+```
+
+## Complete Delivery Assignment Flow Example
+
+Here's a complete example of the delivery assignment flow:
+
+### Step 1: Order is automatically assigned to nearest delivery person
+When an order is created, the system automatically assigns it to the nearest available delivery person based on latitude and longitude.
+
+### Step 2: Delivery person views their assignments
+```graphql
+query GetMyAssignments {
+  getMyAssignments {
+    id
+    status
+    distance
+    expiresAt
+    order {
+      id
+      totalAmount
+      addressLine1
+      city
+      latitude
+      longitude
+    }
+  }
+}
+```
+
+### Step 3: Delivery person accepts the assignment
+```graphql
+mutation AcceptDelivery {
+  acceptDelivery(
+    input: {
+      assignmentId: "ASSIGNMENT_ID_HERE"
+    }
+  ) {
+    id
+    status
+    order {
+      id
+      deliveryPersonId
+    }
+  }
+}
+```
+
+### Step 4: If not accepted within 2 minutes, assignment expires and reassigns
+The system automatically checks every 30 seconds for expired assignments and reassigns them to the next nearest available delivery person.
+
+### Step 5: Delivery person can reject assignment
+```graphql
+mutation RejectDelivery {
+  rejectDelivery(
+    input: {
+      assignmentId: "ASSIGNMENT_ID_HERE"
+      reason: "Too far"
+    }
+  ) {
+    id
+    status
+    order {
+      id
+    }
   }
 }
 ```

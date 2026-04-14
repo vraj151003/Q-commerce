@@ -1,16 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { Permission } from '../../modules/permission/entity/permission.entity';
-import { Repository } from 'typeorm';
+import { Role } from '../../modules/roles/entity/roles.entity';
+import dataSource from '../../config/data-source';
 
-@Injectable()
 export class PermissionSeed {
-  constructor(
-    @InjectRepository(Permission)
-    private permissionRepo: Repository<Permission>,
-  ) {}
+  private dataSource: DataSource;
+
+  constructor() {
+    this.dataSource = dataSource;
+  }
 
   async run() {
+    await this.dataSource.initialize();
+    const permissionRepo = this.dataSource.getRepository(Permission);
+
     const permissions = [
       { name: 'CREATE_USER' },
       { name: 'READ_USER' },
@@ -42,14 +45,16 @@ export class PermissionSeed {
     ];
 
     for (const permission of permissions) {
-      const existingPermission = await this.permissionRepo.findOne({
+      const existingPermission = await permissionRepo.findOne({
         where: { name: permission.name },
       });
 
       if (!existingPermission) {
-        const newPermission = this.permissionRepo.create(permission);
-        await this.permissionRepo.save(newPermission);
+        const newPermission = permissionRepo.create(permission);
+        await permissionRepo.save(newPermission);
       }
     }
+
+    await this.dataSource.destroy();
   }
 }

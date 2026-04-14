@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cart } from './entity/cart.entity';
 import { CartItem } from './entity/cart-item.entity';
+import { Product } from '../products/entity/product.entity';
 import { Repository } from 'typeorm';
 import { AddToCartInput } from './dto/add-item-input';
 
@@ -14,25 +15,44 @@ export class CartService {
   constructor(
     @InjectRepository(Cart) private cartRepo: Repository<Cart>,
     @InjectRepository(CartItem) private itemRepo: Repository<CartItem>,
+    @InjectRepository(Product) private productRepo: Repository<Product>,
   ) {}
 
   async getCart(userId: string) {
     let cart = await this.cartRepo.findOne({
       where: { user: { id: userId }, isActive: true },
-      relations: ['items'],
+      relations: ['items', 'user'],
     });
 
     if (!cart) {
-      cart = this.cartRepo.create({
+      const newCart = this.cartRepo.create({
         user: { id: userId },
       });
-      await this.cartRepo.save(cart);
+      await this.cartRepo.save(newCart);
+      // Fetch again to get the user relation
+      cart = await this.cartRepo.findOne({
+        where: { user: { id: userId }, isActive: true },
+        relations: ['items', 'user'],
+      });
     }
 
-    return cart;
+    return cart!;
   }
 
   async addToCart(input: AddToCartInput, user: AuthUser) {
+    // Check product stock
+    const product = await this.productRepo.findOne({
+      where: { id: input.productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    if (!product.isAvailable) {
+      throw new BadRequestException('Product is not available');
+    }
+
     const cart = await this.getCart(user.userId);
 
     let item = await this.itemRepo.findOne({
@@ -42,12 +62,22 @@ export class CartService {
       },
     });
 
+    const newQuantity = item ? item.quantity + input.quantity : input.quantity;
+
+    if (newQuantity > product.stockQuantity) {
+      throw new BadRequestException(
+        `Requested quantity (${newQuantity}) exceeds available stock (${product.stockQuantity})`
+      );
+    }
+
     if (item) {
       item.quantity += input.quantity;
       item.totalPrice = item.quantity * item.price;
     } else {
       item = this.itemRepo.create({
-        ...input,
+        productId: input.productId,
+        quantity: input.quantity,
+        price: input.price,
         totalPrice: input.quantity * input.price,
         cart,
       });
@@ -59,6 +89,25 @@ export class CartService {
   }
 
   async updateItem(productId: string, quantity: number, user: AuthUser) {
+    // Check product stock
+    const product = await this.productRepo.findOne({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    if (!product.isAvailable) {
+      throw new BadRequestException('Product is not available');
+    }
+
+    if (quantity > product.stockQuantity) {
+      throw new BadRequestException(
+        `Requested quantity (${quantity}) exceeds available stock (${product.stockQuantity})`
+      );
+    }
+
     const cart = await this.getCart(user.userId);
 
     const item = await this.itemRepo.findOne({
@@ -119,7 +168,7 @@ export class CartService {
 
     return this.cartRepo.findOne({
       where: { id: cartId },
-      relations: ['items'],
+      relations: ['items', 'user'],
     });
   }
 }

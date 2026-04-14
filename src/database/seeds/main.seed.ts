@@ -1,23 +1,33 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from '../../app.module';
 import { PermissionSeed } from './permission.seed';
 import { UserSeed } from './user.seed';
+import { CategorySeed } from './category.seed';
+import { SubCategorySeed } from './subcategory.seed';
+import { ShopSeed } from './shop.seed';
+import { ProductSeed } from './product.seed';
+import { DeliveryProfileSeed } from './delivery-profile.seed';
 
 async function runSeeds() {
-  const app = await NestFactory.createApplicationContext(AppModule);
+  try {
+    const permissionSeed = new PermissionSeed();
+    const userSeed = new UserSeed();
+    const categorySeed = new CategorySeed();
+    const subCategorySeed = new SubCategorySeed();
+    const shopSeed = new ShopSeed();
+    const productSeed = new ProductSeed();
+    const deliveryProfileSeed = new DeliveryProfileSeed();
 
-  const permissionSeed = app.get(PermissionSeed);
-  const userSeed = app.get(UserSeed);
+    await permissionSeed.run();
+    await userSeed.run();
+    await categorySeed.run();
+    await subCategorySeed.run();
+    await shopSeed.run();
+    await productSeed.run();
+    await deliveryProfileSeed.run();
 
-  await permissionSeed.run();
-
-  await userSeed.run();
-
-  await app.close();
-  process.exit(0);
+    process.exit(0);
+  } catch (error) {
+    process.exit(1);
+  }
 }
 
-runSeeds().catch((error) => {
-  console.error('Error running seeds:', error);
-  process.exit(1);
-});
+runSeeds();

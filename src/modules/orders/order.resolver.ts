@@ -4,8 +4,8 @@ import { Order } from './entity/order.entity';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
 import { OrderService } from './order.service';
 import { CreateOrderInput } from './dto/create-order-input';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 import { UpdateOrderStatusInput } from './dto/update-order-input';
 
 interface AuthUser {
@@ -60,6 +60,15 @@ export class OrderResolver {
   @Mutation(() => Order)
   updateOrderStatus(@Args('input') input: UpdateOrderStatusInput) {
     return this.orderService.updateStatus(input.orderId, input.status);
+  }
+
+  // CANCEL /orders/:id
+  @Mutation(() => Order)
+  cancelOrder(
+    @Args('id') id: string,
+    @Args('cancelReason', { nullable: true }) cancelReason?: string,
+  ) {
+    return this.orderService.cancelOrder(id, cancelReason);
   }
 
   // GET /orders/seller

@@ -194,7 +194,6 @@ export class MediaService {
         return 'Unknown error occurred';
       }
     } catch (error) {
-      console.error('Cloudinary destroy error:', error);
       throw new BadRequestException(`Failed to delete file: ${error.message}`);
     }
   }

@@ -21,6 +21,7 @@ import { MediaModule } from './modules/media/media.module';
 import { CartModule } from './modules/cart/cart.module';
 import { OrderModule } from './modules/orders/order.module';
 import { DeliveryProfileModule } from './modules/delivery-profile/delivery-profile.module';
+import { DeliveryAssignmentModule } from './modules/delivery-assignment/delivery-assignment.module';
 
 @Module({
   imports: [
@@ -67,7 +68,8 @@ import { DeliveryProfileModule } from './modules/delivery-profile/delivery-profi
     MediaModule,
     CartModule,
     OrderModule,
-    DeliveryProfileModule
+    DeliveryProfileModule,
+    DeliveryAssignmentModule
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],
