@@ -1,8 +1,10 @@
+import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { Permission } from '../../modules/permission/entity/permission.entity';
 import { Role } from '../../modules/roles/entity/roles.entity';
 import dataSource from '../../config/data-source';
 
+@Injectable()
 export class PermissionSeed {
   private dataSource: DataSource;
 

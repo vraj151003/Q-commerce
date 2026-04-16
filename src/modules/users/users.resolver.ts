@@ -11,7 +11,9 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { GetAllUsersInput } from './dto/get-all-users.input';
 import { UserListPaginatedResponse } from './dto/paginated-user.response';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 @Resolver()
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}

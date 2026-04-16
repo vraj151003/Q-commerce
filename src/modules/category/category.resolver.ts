@@ -1,4 +1,4 @@
-import { Query, UseGuards } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import { Args, Mutation, Resolver, Query as GQLQuery } from '@nestjs/graphql';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
@@ -9,6 +9,7 @@ import { Permissions } from '../../common/decorators/permissions.decorator';
 import { UpdateCategoryInput } from './dto/update-category.input';
 
 @Resolver(() => Category)
+@Injectable()
 @UseGuards(GqlAuthGuard, PermissionsGuard)
 export class CategoryResolver {
   constructor(private readonly categoryService: CategoryService) {}

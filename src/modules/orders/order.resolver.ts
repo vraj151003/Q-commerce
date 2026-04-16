@@ -1,4 +1,4 @@
-import { UseGuards } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Order } from './entity/order.entity';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
@@ -20,12 +20,15 @@ interface GqlContext {
 }
 
 @Resolver(() => Order)
+@Injectable()
 @UseGuards(GqlAuthGuard)
 export class OrderResolver {
   constructor(private readonly orderService: OrderService) {}
 
   // POST /orders
   @Mutation(() => Order)
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   createOrder(@Args('input') input: CreateOrderInput, @Context() ctx: GqlContext) {
     return this.orderService.createOrder(ctx.req.user, input);
   }

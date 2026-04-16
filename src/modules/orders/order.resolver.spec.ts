@@ -26,6 +26,8 @@ const mockOrder = {
   totalAmount: 100,
   totalItems: 2,
   status: OrderStatus.PENDING,
+  paymentStatus: PaymentStatus.PENDING,
+  paymentMethod: paymentMethod.ONLINE_PAYMENT,
 };
 
 const mockOrderList = [mockOrder];
@@ -103,10 +105,13 @@ describe('OrderResolver (feature)', () => {
         state: "State"
         country: "Country"
         pincode: "00000"
+        paymentMethod: ONLINE_PAYMENT
       }) {
         id
         totalAmount
         status
+        paymentStatus
+        paymentMethod
       }
     }`;
 
@@ -115,9 +120,15 @@ describe('OrderResolver (feature)', () => {
     expect(response.body.errors).toBeUndefined();
     expect(service.createOrder).toHaveBeenCalledWith(
       { userId: 'user-id', role: 'admin' },
-      expect.objectContaining({ addressLine1: '123 Main St', city: 'Town' }),
+      expect.objectContaining({ addressLine1: '123 Main St', city: 'Town', paymentMethod: paymentMethod.ONLINE_PAYMENT }),
     );
-    expect(response.body.data.createOrder).toEqual({ id: 'order-id', totalAmount: 100, status: OrderStatus.PENDING });
+    expect(response.body.data.createOrder).toEqual({ 
+      id: 'order-id', 
+      totalAmount: 100, 
+      status: OrderStatus.PENDING,
+      paymentStatus: PaymentStatus.PENDING,
+      paymentMethod: paymentMethod.ONLINE_PAYMENT
+    });
   });
 
   it('should fail validation when createOrder input misses required field', async () => {
@@ -136,6 +147,27 @@ describe('OrderResolver (feature)', () => {
     expect(response.body.data).toBeFalsy();
     expect(response.body.errors).toBeDefined();
     expect(response.body.errors[0].message).toContain('CreateOrderInput.city');
+    expect(service.createOrder).not.toHaveBeenCalled();
+  });
+
+  it('should fail validation when createOrder input misses paymentMethod', async () => {
+    const query = `mutation {
+      createOrder(input: {
+        addressLine1: "123 Main St"
+        city: "Town"
+        state: "State"
+        country: "Country"
+        pincode: "00000"
+      }) {
+        id
+      }
+    }`;
+
+    const response = await request(app.getHttpServer()).post('/graphql').send({ query }).expect(400);
+
+    expect(response.body.data).toBeFalsy();
+    expect(response.body.errors).toBeDefined();
+    expect(response.body.errors[0].message).toContain('CreateOrderInput.paymentMethod');
     expect(service.createOrder).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Permission } from './entity/permission.entity';
-import { UseGuards } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -14,6 +14,7 @@ import { GetPermissionsInput } from './dto/get-permissions.input';
 import { PermissionListPaginatedResponse } from './dto/paginated-permission.response';
 
 @Resolver(() => Permission)
+@Injectable()
 @UseGuards(GqlAuthGuard, RolesGuard)
 export class PermissionResolver {
   constructor(private permissionService: PermissionService) {}

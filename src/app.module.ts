@@ -22,6 +22,7 @@ import { CartModule } from './modules/cart/cart.module';
 import { OrderModule } from './modules/orders/order.module';
 import { DeliveryProfileModule } from './modules/delivery-profile/delivery-profile.module';
 import { DeliveryAssignmentModule } from './modules/delivery-assignment/delivery-assignment.module';
+import { PaymentModule } from './modules/payment/payment.module';
 
 @Module({
   imports: [
@@ -69,7 +70,8 @@ import { DeliveryAssignmentModule } from './modules/delivery-assignment/delivery
     CartModule,
     OrderModule,
     DeliveryProfileModule,
-    DeliveryAssignmentModule
+    DeliveryAssignmentModule,
+    PaymentModule
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],

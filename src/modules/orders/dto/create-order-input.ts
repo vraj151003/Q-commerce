@@ -1,4 +1,5 @@
 import { Field, InputType } from "@nestjs/graphql";
+import { paymentMethod } from "../../../common/constant/status";
 
 @InputType()
 export class CreateOrderInput {
@@ -10,12 +11,22 @@ export class CreateOrderInput {
 
   @Field() 
   city: string;
+  
   @Field() 
   state: string;
+  
   @Field()
-   country: string;
+  country: string;
+  
   @Field()
-   pincode: string;
-  @Field({ nullable: true }) latitude?: number;
-  @Field({ nullable: true }) longitude?: number;
+  pincode: string;
+  
+  @Field({ nullable: true }) 
+  latitude?: number;
+  
+  @Field({ nullable: true }) 
+  longitude?: number;
+
+  @Field(() => paymentMethod)
+  paymentMethod: paymentMethod;
 }

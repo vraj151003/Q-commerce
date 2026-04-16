@@ -1,5 +1,5 @@
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import { Shop } from './entity/shop.entity';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
 import { ShopService } from './shop.service';
@@ -16,6 +16,7 @@ import {
 } from '../../common/dto/api-response.dto';
 
 @Resolver(() => Shop)
+@Injectable()
 @UseGuards(GqlAuthGuard)
 export class ShopResolver {
   constructor(private readonly shopService: ShopService) {}

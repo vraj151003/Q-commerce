@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
@@ -9,6 +10,7 @@ export interface OtpJobData {
   type: 'REGISTER' | 'FORGOT_PASSWORD';
 }
 
+@Injectable()
 @Processor('otp-queue')
 export class OtpProcessor extends WorkerHost {
   private readonly logger = new Logger(OtpProcessor.name);

@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { Query, Resolver } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../../modules/auth/gql-auth.guard';
@@ -6,6 +7,7 @@ import { Roles } from '../decorators/roles.decorator';
 import { OtpQueueService } from './otp-queue.service';
 import { BooleanResponse, QueueStatusResponse } from '../dto/api-response.dto';
 
+@Injectable()
 @Resolver()
 export class QueueResolver {
   constructor(private readonly otpQueueService: OtpQueueService) {}

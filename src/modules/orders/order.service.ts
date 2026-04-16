@@ -6,7 +6,7 @@ import { Cart } from "../cart/entity/cart.entity";
 import { Product } from "../products/entity/product.entity";
 import { Repository } from "typeorm";
 import { CreateOrderInput } from "./dto/create-order-input";
-import { OrderStatus } from "../../common/constant/status";
+import { OrderStatus, paymentMethod, PaymentStatus } from "../../common/constant/status";
 import * as ejs from 'ejs';
 import * as puppeteer from 'puppeteer';
 import * as path from 'path';
@@ -22,86 +22,92 @@ export class OrderService {
     private deliveryAssignmentService: DeliveryAssignmentService,
   ) {}
 
-  async createOrder(user: any, input: CreateOrderInput) {
-    const cart = await this.cartRepo.findOne({
-      where: { user: { id: user.userId } },
-      relations: ['items'],
+async createOrder(user: any, input: CreateOrderInput) {
+  const cart = await this.cartRepo.findOne({
+    where: { user: { id: user.userId } },
+    relations: ['items'],
+  });
+
+  if (!cart || cart.items.length === 0) {
+    throw new BadRequestException('Cart is empty');
+  }
+
+  // Validate stock for all items before creating order
+  for (const cartItem of cart.items) {
+    const product = await this.productRepo.findOne({
+      where: { id: cartItem.productId },
     });
 
-    if (!cart || cart.items.length === 0) {
-      throw new BadRequestException('Cart is empty');
+    if (!product) {
+      throw new NotFoundException(`Product ${cartItem.productId} not found`);
     }
 
-    // Validate stock for all items before creating order
-    for (const cartItem of cart.items) {
-      const product = await this.productRepo.findOne({
+    if (!product.isAvailable) {
+      throw new BadRequestException(`Product ${product.name} is not available`);
+    }
+
+    if (cartItem.quantity > product.stockQuantity) {
+      throw new BadRequestException(
+        `Requested quantity for ${product.name} (${cartItem.quantity}) exceeds available stock (${product.stockQuantity})`
+      );
+    }
+  }
+
+  // Set initial payment status based on payment method
+  const initialPaymentStatus = input.paymentMethod === paymentMethod.CASH_ON_DELIVERY 
+    ? PaymentStatus.PENDING 
+    : PaymentStatus.PENDING;
+
+  const order = this.orderRepo.create({
+    ...input,
+    user: { id: user.userId },
+    totalAmount: cart.totalAmount,
+    totalItems: cart.totalItems,
+    status: OrderStatus.PENDING,
+    paymentStatus: initialPaymentStatus,
+  });
+
+  const savedOrder = await this.orderRepo.save(order);
+
+  const items = cart.items.map((item) =>
+    this.itemRepo.create({
+      productId: item.productId,
+      quantity: item.quantity,
+      price: item.price,
+      totalPrice: item.totalPrice,
+      order: savedOrder,
+    }),
+  );
+
+  await this.itemRepo.save(items);
+
+  // Reduce stock for each product
+  for (const cartItem of cart.items) {
+    await this.productRepo.manager.transaction(async (transactionalEntityManager) => {
+      const product = await transactionalEntityManager.findOne(Product, {
         where: { id: cartItem.productId },
       });
 
-      if (!product) {
-        throw new NotFoundException(`Product ${cartItem.productId} not found`);
+      if (product && product.stockQuantity >= cartItem.quantity) {
+        product.stockQuantity -= cartItem.quantity;
+        await transactionalEntityManager.save(product);
       }
-
-      if (!product.isAvailable) {
-        throw new BadRequestException(`Product ${product.name} is not available`);
-      }
-
-      if (cartItem.quantity > product.stockQuantity) {
-        throw new BadRequestException(
-          `Requested quantity for ${product.name} (${cartItem.quantity}) exceeds available stock (${product.stockQuantity})`
-        );
-      }
-    }
-
-    const order = this.orderRepo.create({
-      ...input,
-      user: { id: user.userId },
-      totalAmount: cart.totalAmount,
-      totalItems: cart.totalItems,
-      status: OrderStatus.PENDING,
     });
-
-    const savedOrder = await this.orderRepo.save(order);
-
-    const items = cart.items.map((item) =>
-      this.itemRepo.create({
-        productId: item.productId,
-        quantity: item.quantity,
-        price: item.price,
-        totalPrice: item.totalPrice,
-        order: savedOrder,
-      }),
-    );
-
-    await this.itemRepo.save(items);
-
-    // Reduce stock for each product
-    for (const cartItem of cart.items) {
-      await this.productRepo.manager.transaction(async (transactionalEntityManager) => {
-        const product = await transactionalEntityManager.findOne(Product, {
-          where: { id: cartItem.productId },
-        });
-
-        if (product && product.stockQuantity >= cartItem.quantity) {
-          product.stockQuantity -= cartItem.quantity;
-          await transactionalEntityManager.save(product);
-        }
-      });
-    }
-
-    // clear cart
-    cart.items = [];
-    cart.totalAmount = 0;
-    cart.totalItems = 0;
-    await this.cartRepo.save(cart);
-
-    // Auto-assign to nearest delivery person
-    this.deliveryAssignmentService.autoAssignOrder(savedOrder.id).catch((error) => {
-      console.error('Failed to auto-assign delivery:', error);
-    });
-
-    return this.findOne(savedOrder.id);
   }
+
+  // clear cart
+  cart.items = [];
+  cart.totalAmount = 0;
+  cart.totalItems = 0;
+  await this.cartRepo.save(cart);
+
+  // Auto-assign to nearest delivery person
+  this.deliveryAssignmentService.autoAssignOrder(savedOrder.id).catch((error) => {
+    console.error('Failed to auto-assign delivery:', error);
+  });
+
+  return this.findOne(savedOrder.id);
+}
 
   // Admin - All Orders
   findAll() {

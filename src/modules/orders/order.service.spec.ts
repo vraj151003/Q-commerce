@@ -1,6 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { OrderStatus } from '../../common/constant/status';
+import { OrderStatus, paymentMethod, PaymentStatus } from '../../common/constant/status';
 import * as ejs from 'ejs';
 import * as puppeteer from 'puppeteer';
 
@@ -35,6 +35,8 @@ describe('OrderService', () => {
     totalAmount: 100,
     totalItems: 2,
     status: OrderStatus.PENDING,
+    paymentStatus: PaymentStatus.PENDING,
+    paymentMethod: paymentMethod.ONLINE_PAYMENT,
   };
 
   beforeEach(() => {
@@ -110,6 +112,7 @@ describe('OrderService', () => {
         state: 'State',
         country: 'Country',
         pincode: '00000',
+        paymentMethod: paymentMethod.ONLINE_PAYMENT,
       },
     );
 
@@ -121,6 +124,8 @@ describe('OrderService', () => {
       totalAmount: 100,
       totalItems: 2,
       status: OrderStatus.PENDING,
+      paymentStatus: PaymentStatus.PENDING,
+      paymentMethod: paymentMethod.ONLINE_PAYMENT,
       user: { id: 'user-id' },
     }));
     expect(itemRepo.save).toHaveBeenCalledWith(expect.any(Array));
@@ -144,6 +149,7 @@ describe('OrderService', () => {
         state: 'State',
         country: 'Country',
         pincode: '00000',
+        paymentMethod: paymentMethod.ONLINE_PAYMENT,
       }),
     ).rejects.toThrow(BadRequestException);
 
@@ -305,6 +311,7 @@ describe('OrderService', () => {
           state: 'State',
           country: 'Country',
           pincode: '00000',
+          paymentMethod: paymentMethod.ONLINE_PAYMENT,
         },
       ),
     ).rejects.toThrow(NotFoundException);
@@ -325,6 +332,7 @@ describe('OrderService', () => {
           state: 'State',
           country: 'Country',
           pincode: '00000',
+          paymentMethod: paymentMethod.ONLINE_PAYMENT,
         },
       ),
     ).rejects.toThrow(BadRequestException);
@@ -345,6 +353,7 @@ describe('OrderService', () => {
           state: 'State',
           country: 'Country',
           pincode: '00000',
+          paymentMethod: paymentMethod.ONLINE_PAYMENT,
         },
       ),
     ).rejects.toThrow(BadRequestException);
@@ -403,5 +412,118 @@ describe('OrderService', () => {
     orderRepo.findOne.mockResolvedValue(deliveredOrder);
 
     await expect(service.cancelOrder('order-id')).rejects.toThrow(BadRequestException);
+  });
+
+  // Payment-related test cases
+  it('should set payment status to PENDING for ONLINE_PAYMENT', async () => {
+    const product1 = { id: 'prod-1', isAvailable: true, stockQuantity: 10 };
+    const product2 = { id: 'prod-2', isAvailable: true, stockQuantity: 5 };
+    const testCartWithItems = {
+      id: 1,
+      totalAmount: 100,
+      totalItems: 2,
+      items: [
+        { productId: 'prod-1', quantity: 1, price: 20, totalPrice: 20 },
+        { productId: 'prod-2', quantity: 1, price: 80, totalPrice: 80 },
+      ],
+    };
+    
+    productRepo.findOne.mockImplementation((options: any) => {
+      if (options.where.id === 'prod-1') return Promise.resolve(product1);
+      if (options.where.id === 'prod-2') return Promise.resolve(product2);
+      return Promise.resolve(undefined);
+    });
+    
+    cartRepo.findOne.mockResolvedValue(testCartWithItems);
+    orderRepo.create.mockReturnValue({ ...savedOrder, user: { id: 'user-id' } });
+    orderRepo.save.mockResolvedValue(savedOrder);
+    itemRepo.create.mockImplementation((item) => item);
+    itemRepo.save.mockResolvedValue(testCartWithItems.items);
+    cartRepo.save.mockResolvedValue({ ...testCartWithItems, items: [], totalAmount: 0, totalItems: 0 });
+    orderRepo.findOne.mockResolvedValue(savedOrder);
+
+    const transactionCallback = jest.fn((callback) => {
+      const transactionalEntityManager = {
+        findOne: jest.fn().mockResolvedValue(product1),
+        save: jest.fn().mockResolvedValue(product1),
+      };
+      return callback(transactionalEntityManager);
+    });
+    productRepo.manager.transaction.mockImplementation(transactionCallback);
+
+    const result = await service.createOrder(
+      { userId: 'user-id' },
+      {
+        addressLine1: '123 Main St',
+        addressLine2: 'Apt 1',
+        city: 'Town',
+        state: 'State',
+        country: 'Country',
+        pincode: '00000',
+        paymentMethod: paymentMethod.ONLINE_PAYMENT,
+      },
+    );
+
+    expect(orderRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+      paymentStatus: PaymentStatus.PENDING,
+      paymentMethod: paymentMethod.ONLINE_PAYMENT,
+    }));
+    expect(result).toEqual(savedOrder);
+  });
+
+  it('should set payment status to PENDING for CASH_ON_DELIVERY', async () => {
+    const product1 = { id: 'prod-1', isAvailable: true, stockQuantity: 10 };
+    const product2 = { id: 'prod-2', isAvailable: true, stockQuantity: 5 };
+    const testCartWithItems = {
+      id: 1,
+      totalAmount: 100,
+      totalItems: 2,
+      items: [
+        { productId: 'prod-1', quantity: 1, price: 20, totalPrice: 20 },
+        { productId: 'prod-2', quantity: 1, price: 80, totalPrice: 80 },
+      ],
+    };
+    
+    productRepo.findOne.mockImplementation((options: any) => {
+      if (options.where.id === 'prod-1') return Promise.resolve(product1);
+      if (options.where.id === 'prod-2') return Promise.resolve(product2);
+      return Promise.resolve(undefined);
+    });
+    
+    cartRepo.findOne.mockResolvedValue(testCartWithItems);
+    orderRepo.create.mockReturnValue({ ...savedOrder, user: { id: 'user-id' } });
+    orderRepo.save.mockResolvedValue(savedOrder);
+    itemRepo.create.mockImplementation((item) => item);
+    itemRepo.save.mockResolvedValue(testCartWithItems.items);
+    cartRepo.save.mockResolvedValue({ ...testCartWithItems, items: [], totalAmount: 0, totalItems: 0 });
+    orderRepo.findOne.mockResolvedValue(savedOrder);
+
+    const transactionCallback = jest.fn((callback) => {
+      const transactionalEntityManager = {
+        findOne: jest.fn().mockResolvedValue(product1),
+        save: jest.fn().mockResolvedValue(product1),
+      };
+      return callback(transactionalEntityManager);
+    });
+    productRepo.manager.transaction.mockImplementation(transactionCallback);
+
+    const result = await service.createOrder(
+      { userId: 'user-id' },
+      {
+        addressLine1: '123 Main St',
+        addressLine2: 'Apt 1',
+        city: 'Town',
+        state: 'State',
+        country: 'Country',
+        pincode: '00000',
+        paymentMethod: paymentMethod.CASH_ON_DELIVERY,
+      },
+    );
+
+    expect(orderRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+      paymentStatus: PaymentStatus.PENDING,
+      paymentMethod: paymentMethod.CASH_ON_DELIVERY,
+    }));
+    expect(result).toEqual(savedOrder);
   });
 });

@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { User } from '../../modules/users/entity/users.entity';
 import { Role } from '../../modules/roles/entity/roles.entity';
@@ -5,6 +6,7 @@ import { Permission } from '../../modules/permission/entity/permission.entity';
 import dataSource from '../../config/data-source';
 import * as bcrypt from 'bcrypt';
 
+@Injectable()
 export class UserSeed {
   private dataSource: DataSource;
 

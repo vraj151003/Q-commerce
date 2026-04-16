@@ -1,6 +1,6 @@
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { DeliveryProfile } from './entity/delivery-profile.entity';
-import { UseGuards } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -9,6 +9,7 @@ import { CreateDeliveryProfileInput } from './dto/create-delivery-profile.input'
 import { UpdateDeliveryProfileInput } from './dto/update-delivery-profile.input';
 
 @Resolver(() => DeliveryProfile)
+@Injectable()
 @UseGuards(GqlAuthGuard, RolesGuard)
 export class DeliveryProfileResolver {
   constructor(private deliveryProfileService: DeliveryProfileService) {}

@@ -3,6 +3,7 @@ import { Cart } from './entity/cart.entity';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
+import { Injectable } from '@nestjs/common';
 import { Permissions } from '../../common/decorators/permissions.decorator';
 import { AddToCartInput } from './dto/add-item-input';
 import { CartService } from './cart.service';
@@ -19,6 +20,7 @@ interface GqlContext {
 
 @Resolver(() => Cart)
 @UseGuards(GqlAuthGuard, PermissionsGuard)
+@Injectable()
 @Permissions('CART')
 export class CartResolver {
   constructor(private cartService: CartService) {}

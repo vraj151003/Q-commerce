@@ -1,4 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Injectable } from '@nestjs/common';
 import { Role } from './entity/roles.entity';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
@@ -14,6 +15,7 @@ import { GetRolesInput } from './dto/get-roles.input';
 import { RoleListPaginatedResponse } from './dto/paginated-role.response';
 
 @Resolver(() => Role)
+@Injectable()
 @UseGuards(GqlAuthGuard, RolesGuard)
 export class RolesResolver {
   constructor(private roleService: RolesService) {}

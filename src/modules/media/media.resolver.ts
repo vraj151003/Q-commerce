@@ -1,4 +1,5 @@
 import { Args, Field, Mutation, ObjectType, Resolver } from '@nestjs/graphql';
+import { Injectable } from '@nestjs/common';
 import { MediaService } from './media.service';
 
 @ObjectType()
@@ -25,6 +26,7 @@ class UploadResponse {
   sourceUrl: string;
 }
 
+@Injectable()
 @Resolver()
 export class MediaResolver {
   constructor(private mediaService: MediaService) {}

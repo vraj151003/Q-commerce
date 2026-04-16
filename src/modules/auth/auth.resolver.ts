@@ -12,8 +12,10 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { VerifyOtpInput } from './dto/verify-otp.input';
 import { ResetPasswordInput } from './dto/reset-password.input';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { Injectable } from '@nestjs/common';
 import { Roles } from '../../common/decorators/roles.decorator';
 
+@Injectable()
 @Resolver()
 export class AuthResolver {
   constructor(private authService: AuthService) {}

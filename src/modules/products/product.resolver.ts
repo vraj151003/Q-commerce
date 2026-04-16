@@ -1,4 +1,4 @@
-import { UseGuards } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
@@ -9,6 +9,7 @@ import { CreateProductInput } from './dto/create-product.input';
 import { UpdateProductInput } from './dto/update-product.input';
 
 @Resolver(() => Product)
+@Injectable()
 @UseGuards(GqlAuthGuard, PermissionsGuard)
 export class ProductResolver {
   constructor(private readonly productService: ProductService) {}

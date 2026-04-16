@@ -213,6 +213,34 @@ type DeliveryProfile {
   user: User!
 }
 
+type OrderItem {
+  id: ID!
+  quantity: Float!
+  price: Float!
+  totalPrice: Float!
+  productId: String!
+}
+
+type Order {
+  id: ID!
+  totalAmount: Float!
+  deliveryCharge: Float!
+  totalItems: Float!
+  status: Float!
+  paymentMethod: Float
+  paymentStatus: Float!
+  addressLine1: String
+  addressLine2: String
+  city: String
+  state: String
+  country: String
+  pincode: String
+  latitude: Float
+  longitude: Float
+  user: User!
+  items: [OrderItem!]!
+}
+
 type PaginatedUsersResponse {
   users: [User!]!
   total: Int!
@@ -254,34 +282,6 @@ type Cart {
   items: [CartItem!]
 }
 
-type OrderItem {
-  id: ID!
-  quantity: Float!
-  price: Float!
-  totalPrice: Float!
-  productId: String!
-}
-
-type Order {
-  id: ID!
-  totalAmount: Float!
-  deliveryCharge: Float!
-  totalItems: Float!
-  status: Float!
-  paymentMethod: Float
-  paymentStatus: Float!
-  addressLine1: String
-  addressLine2: String
-  city: String
-  state: String
-  country: String
-  pincode: String
-  latitude: Float
-  longitude: Float
-  user: User!
-  items: [OrderItem!]!
-}
-
 type DeliveryAssignment {
   id: ID!
   order: Order!
@@ -292,6 +292,11 @@ type DeliveryAssignment {
   retryCount: Float!
   assignedAt: DateTime!
   expiresAt: DateTime!
+}
+
+type CreatePaymentIntentResponse {
+  clientSecret: String!
+  paymentIntentId: String!
 }
 
 type Query {
@@ -395,6 +400,17 @@ type Mutation {
   rejectDelivery(input: RejectDeliveryInput!): DeliveryAssignment!
   createDeliveryProfile(input: CreateDeliveryProfileInput!): DeliveryProfile!
   updateDeliveryProfile(input: UpdateDeliveryProfileInput!): DeliveryProfile!
+
+  """Create a Stripe Payment Intent for an order"""
+  createPaymentIntent(orderId: String!): CreatePaymentIntentResponse!
+
+  """Refund a payment (full or partial)"""
+  refundPayment(
+    orderId: String!
+
+    """Partial refund amount"""
+    amount: Float
+  ): Boolean!
 }
 
 input RegisterInput {
@@ -563,6 +579,13 @@ input CreateOrderInput {
   pincode: String!
   latitude: Float
   longitude: Float
+  paymentMethod: paymentMethod!
+}
+
+"""Available payment methods for a payment record"""
+enum paymentMethod {
+  CASH_ON_DELIVERY
+  ONLINE_PAYMENT
 }
 
 input UpdateOrderStatusInput {

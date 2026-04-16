@@ -103,6 +103,9 @@ export class Order {
   @Field(() => [OrderItem])
   items: OrderItem[];
 
+  @Column({ nullable: true })
+  paymentIntentId: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

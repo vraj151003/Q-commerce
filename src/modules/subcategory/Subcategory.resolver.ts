@@ -1,4 +1,4 @@
-import { UseGuards } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import { SubCategory } from './entity/subcategory.entity';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
@@ -9,6 +9,7 @@ import { CreateSubCategoryInput } from './dto/create-subcategory.input';
 import { UpdateSubCategoryInput } from './dto/update-subcategory.input';
 
 @Resolver(() => SubCategory)
+@Injectable()
 @UseGuards(GqlAuthGuard, PermissionsGuard)
 export class SubCategoryResolver {
   constructor(private readonly subCategoryService: SubCategoryService) {}

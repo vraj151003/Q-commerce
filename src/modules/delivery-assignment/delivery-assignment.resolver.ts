@@ -1,6 +1,6 @@
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { DeliveryAssignment } from './entity/delivery-assignment.entity';
-import { UseGuards } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -9,6 +9,7 @@ import { AcceptDeliveryInput } from './dto/accept-delivery.input';
 import { RejectDeliveryInput } from './dto/reject-delivery.input';
 
 @Resolver(() => DeliveryAssignment)
+@Injectable()
 @UseGuards(GqlAuthGuard, RolesGuard)
 export class DeliveryAssignmentResolver {
   constructor(private deliveryAssignmentService: DeliveryAssignmentService) {}

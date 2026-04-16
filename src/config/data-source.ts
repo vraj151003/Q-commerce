@@ -8,6 +8,9 @@ import { Category } from '../modules/category/entity/category.entity';
 import { SubCategory } from '../modules/subcategory/entity/subcategory.entity';
 import { Product } from '../modules/products/entity/product.entity';
 import { DeliveryProfile } from '../modules/delivery-profile/entity/delivery-profile.entity';
+import { Order } from '../modules/orders/entity/order.entity';
+import { OrderItem } from '../modules/orders/entity/order-item.entity';
+import { Payment } from '../modules/payment/entity/payment.entity';
 
 export default new DataSource({
   type: 'postgres',
@@ -16,7 +19,7 @@ export default new DataSource({
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'testdb',
-  entities: [User, Role, Permission, Shop, Category, SubCategory, Product, DeliveryProfile],
+  entities: [User, Role, Permission, Shop, Category, SubCategory, Product, DeliveryProfile, Order, OrderItem, Payment],
   migrations: ['src/database/migrations/*{.ts,.js}'],
   synchronize: false,
 });
