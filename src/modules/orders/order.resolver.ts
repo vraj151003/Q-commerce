@@ -27,8 +27,6 @@ export class OrderResolver {
 
   // POST /orders
   @Mutation(() => Order)
-  @UseGuards(RolesGuard)
-  @Roles('admin')
   createOrder(@Args('input') input: CreateOrderInput, @Context() ctx: GqlContext) {
     return this.orderService.createOrder(ctx.req.user, input);
   }

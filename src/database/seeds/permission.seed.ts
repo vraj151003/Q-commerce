@@ -42,8 +42,20 @@ export class PermissionSeed {
       { name: 'READ_SUBCATEGORY' },
       { name: 'UPDATE_SUBCATEGORY' },
       { name: 'DELETE_SUBCATEGORY' },
+      { name: 'CREATE_TAX' },
+      { name: 'READ_TAX' },
+      { name: 'UPDATE_TAX' },
+      { name: 'DELETE_TAX' },
       { name: 'MANAGE_DELIVERY' },
       { name: 'VIEW_ANALYTICS' },
+      { name: 'CREATE_NOTIFICATION' },
+      { name: 'READ_NOTIFICATION' },
+      { name: 'UPDATE_NOTIFICATION' },
+      { name: 'DELETE_NOTIFICATION' },
+      { name: 'CREATE_COUPON' },
+      { name: 'READ_COUPON' },
+      { name: 'UPDATE_COUPON' },
+      { name: 'DELETE_COUPON' },
     ];
 
     for (const permission of permissions) {

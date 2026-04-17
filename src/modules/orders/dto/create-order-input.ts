@@ -29,4 +29,7 @@ export class CreateOrderInput {
 
   @Field(() => paymentMethod)
   paymentMethod: paymentMethod;
+
+  @Field({ nullable: true })
+  couponCode?: string;
 }

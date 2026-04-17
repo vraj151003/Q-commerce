@@ -31,6 +31,30 @@ export class OrderItem {
   @Column()
   productId: string;
 
+  @Field({ nullable: true })
+  @Column({ type: 'numeric', nullable: true, default: 0 })
+  cgstAmount: number;
+
+  @Field({ nullable: true })
+  @Column({ type: 'numeric', nullable: true, default: 0 })
+  sgstAmount: number;
+
+  @Field({ nullable: true })
+  @Column({ type: 'numeric', nullable: true, default: 0 })
+  igstAmount: number;
+
+  @Field({ nullable: true })
+  @Column({ type: 'numeric', nullable: true, default: 0 })
+  gstRate: number;
+
+  @Field({ nullable: true })
+  @Column({ type: 'numeric', nullable: true, default: 0 })
+  totalAmountWithTax: number;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  sellerState: string;
+
   @ManyToOne(() => Order, (order) => order.items, {
     onDelete: 'CASCADE',
   })

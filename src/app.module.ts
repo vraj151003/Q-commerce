@@ -23,6 +23,9 @@ import { OrderModule } from './modules/orders/order.module';
 import { DeliveryProfileModule } from './modules/delivery-profile/delivery-profile.module';
 import { DeliveryAssignmentModule } from './modules/delivery-assignment/delivery-assignment.module';
 import { PaymentModule } from './modules/payment/payment.module';
+import { TaxModule } from './modules/tax/tax.module';
+import { NotificationModule } from './modules/notification/notification.module';
+import { CouponModule } from './modules/coupon/coupon.module';
 
 @Module({
   imports: [
@@ -71,7 +74,10 @@ import { PaymentModule } from './modules/payment/payment.module';
     OrderModule,
     DeliveryProfileModule,
     DeliveryAssignmentModule,
-    PaymentModule
+    PaymentModule,
+    TaxModule,
+    NotificationModule,
+    CouponModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],

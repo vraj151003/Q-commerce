@@ -627,6 +627,7 @@ query GetRoles {
 ```
 
 **Filter Options:**
+
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 10)
 - `search`: Search in role name
@@ -747,6 +748,7 @@ query GetPermissions {
 ```
 
 **Filter Options:**
+
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 10)
 - `search`: Search in permission name
@@ -807,10 +809,7 @@ mutation RemovePermission {
 ```graphql
 mutation CreateCategory {
   createCategory(
-    input: {
-      name: "Electronics"
-      description: "Electronic items and gadgets"
-    }
+    input: { name: "Electronics", description: "Electronic items and gadgets" }
   ) {
     id
     name
@@ -902,10 +901,7 @@ mutation DeleteCategory {
 ```graphql
 mutation CreateSubCategory {
   createSubCategory(
-    input: {
-      name: "Mobile Phones"
-      categoryId: "CATEGORY_ID_HERE"
-    }
+    input: { name: "Mobile Phones", categoryId: "CATEGORY_ID_HERE" }
   ) {
     id
     name
@@ -961,10 +957,7 @@ query GetSubCategory {
 ```graphql
 mutation UpdateSubCategory {
   updateSubCategory(
-    input: {
-      id: "SUBCATEGORY_ID_HERE"
-      name: "Updated Mobile Phones"
-    }
+    input: { id: "SUBCATEGORY_ID_HERE", name: "Updated Mobile Phones" }
   ) {
     id
     name
@@ -1036,12 +1029,7 @@ query GetSubCategory {
 
 ```graphql
 mutation UpdateSubCategory {
-  updateSubCategory(
-    input: {
-      id: "SUBCATEGORY_ID_HERE"
-      name: "Smartphones"
-    }
-  ) {
+  updateSubCategory(input: { id: "SUBCATEGORY_ID_HERE", name: "Smartphones" }) {
     id
     name
     createdAt
@@ -1061,6 +1049,291 @@ mutation UpdateSubCategory {
 ```graphql
 mutation DeleteSubCategory {
   deleteSubCategory(id: "SUBCATEGORY_ID_HERE")
+}
+```
+
+## Tax Management APIs
+
+### Create Tax
+
+```graphql
+mutation CreateTax {
+  createTax(
+    input: {
+      categoryId: "CATEGORY_ID_HERE"
+      taxRate: 18
+      description: "Standard GST rate"
+    }
+  ) {
+    id
+    category {
+      id
+      name
+    }
+    categoryId
+    taxRate
+    description
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### Get All Taxes
+
+```graphql
+query GetTaxes {
+  getTaxes {
+    id
+    category {
+      id
+      name
+    }
+    categoryId
+    taxRate
+    description
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### Get Tax By ID
+
+```graphql
+query GetTax {
+  getTax(id: "TAX_ID_HERE") {
+    id
+    category {
+      id
+      name
+    }
+    categoryId
+    taxRate
+    description
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### Get Tax By Category
+
+```graphql
+query GetTaxByCategory {
+  getTaxByCategory(categoryId: "CATEGORY_ID_HERE") {
+    id
+    category {
+      id
+      name
+    }
+    categoryId
+    taxRate
+    description
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+```
+
+**Note:** Returns `null` if no active tax is found for the category.
+
+### Update Tax
+
+```graphql
+mutation UpdateTax {
+  updateTax(
+    input: {
+      id: "TAX_ID_HERE"
+      taxRate: 28
+      description: "Increased GST rate"
+      isActive: true
+    }
+  ) {
+    id
+    category {
+      id
+      name
+    }
+    categoryId
+    taxRate
+    description
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### Delete Tax
+
+```graphql
+mutation DeleteTax {
+  deleteTax(id: "TAX_ID_HERE")
+}
+```
+
+## Coupon Management APIs
+
+### Create Coupon
+
+```graphql
+mutation CreateCoupon {
+  createCoupon(
+    input: {
+      code: "SAVE10"
+      discountType: PERCENTAGE
+      discountValue: 10
+      maxDiscountAmount: 50
+      minOrderAmount: 100
+      startDate: "2024-01-01"
+      expiryDate: "2030-12-31"
+      usageLimit: 100
+      isActive: true
+    }
+  ) {
+    id
+    code
+    discountType
+    discountValue
+    maxDiscountAmount
+    minOrderAmount
+    startDate
+    expiryDate
+    usageLimit
+    usageCount
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+```
+
+**Note:** Requires `CREATE_COUPON` permission (admin only).
+
+### Get All Coupons
+
+```graphql
+query GetCoupons {
+  getCoupons {
+    id
+    code
+    discountType
+    discountValue
+    maxDiscountAmount
+    minOrderAmount
+    startDate
+    expiryDate
+    usageLimit
+    usageCount
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### Get Coupon By ID
+
+```graphql
+query GetCoupon {
+  getCoupon(id: "COUPON_ID_HERE") {
+    id
+    code
+    discountType
+    discountValue
+    maxDiscountAmount
+    minOrderAmount
+    startDate
+    expiryDate
+    usageLimit
+    usageCount
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### Get Coupon By Code
+
+```graphql
+query GetCouponByCode {
+  getCouponByCode(code: "SAVE10") {
+    id
+    code
+    discountType
+    discountValue
+    maxDiscountAmount
+    minOrderAmount
+    startDate
+    expiryDate
+    usageLimit
+    usageCount
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### Update Coupon
+
+```graphql
+mutation UpdateCoupon {
+  updateCoupon(
+    id: "COUPON_ID_HERE"
+    input: { discountValue: 20, isActive: true }
+  ) {
+    id
+    code
+    discountType
+    discountValue
+    maxDiscountAmount
+    minOrderAmount
+    startDate
+    expiryDate
+    usageLimit
+    usageCount
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+```
+
+**Note:** Requires `UPDATE_COUPON` permission (admin only).
+
+### Delete Coupon
+
+```graphql
+mutation DeleteCoupon {
+  deleteCoupon(id: "COUPON_ID_HERE")
+}
+```
+
+**Note:** Requires `DELETE_COUPON` permission (admin only).
+
+### Apply Coupon
+
+```graphql
+mutation ApplyCoupon {
+  applyCoupon(input: { code: "SAVE10", orderAmount: 100 }) {
+    coupon {
+      id
+      code
+      discountType
+      discountValue
+      maxDiscountAmount
+      minOrderAmount
+    }
+    discountAmount
+    finalAmount
+  }
 }
 ```
 
@@ -1251,6 +1524,7 @@ mutation DeleteProduct {
 **Note:** This API accepts a local file path and uploads it to Cloudinary. The service will validate the file, check size and format before uploading.
 
 **Simple Upload Example:**
+
 ```graphql
 mutation {
   uploadMedia(filePath: "/home/user/downloads/image.jpg") {
@@ -1266,6 +1540,7 @@ mutation {
 ```
 
 **With Variables:**
+
 ```graphql
 mutation UploadMedia($filePath: String!) {
   uploadMedia(filePath: $filePath) {
@@ -1281,6 +1556,7 @@ mutation UploadMedia($filePath: String!) {
 ```
 
 Variables:
+
 ```json
 {
   "filePath": "/home/user/downloads/image.jpg"
@@ -1288,6 +1564,7 @@ Variables:
 ```
 
 **Your Example:**
+
 ```graphql
 mutation {
   uploadMedia(filePath: "/home/wappnet-95/Downloads/download (1).jpeg") {
@@ -1303,6 +1580,7 @@ mutation {
 ```
 
 **Supported File Types:**
+
 - Images: jpg, jpeg, png, gif, webp, svg (Max: 5MB)
 - Videos: mp4, avi, mov, wmv, flv, webm (Max: 100MB)
 - PDF files (Max: 10MB)
@@ -1310,9 +1588,12 @@ mutation {
 ### 37) Delete Media
 
 **Simple Delete Example:**
+
 ```graphql
 mutation {
-  deleteFile(url: "https://res.cloudinary.com/your-cloud-name/image/upload/v1/media/abc123.jpg")
+  deleteFile(
+    url: "https://res.cloudinary.com/your-cloud-name/image/upload/v1/media/abc123.jpg"
+  )
 }
 ```
 
@@ -1355,11 +1636,7 @@ query GetCart {
 ```graphql
 mutation AddToCart {
   addToCart(
-    input: {
-      productId: "PRODUCT_ID_HERE"
-      quantity: 2
-      price: 999.99
-    }
+    input: { productId: "PRODUCT_ID_HERE", quantity: 2, price: 999.99 }
   ) {
     id
     totalAmount
@@ -1383,10 +1660,7 @@ mutation AddToCart {
 
 ```graphql
 mutation UpdateCartItem {
-  updateCartItem(
-    productId: "PRODUCT_ID_HERE"
-    quantity: 3
-  ) {
+  updateCartItem(productId: "PRODUCT_ID_HERE", quantity: 3) {
     id
     totalAmount
     totalItems
@@ -1454,6 +1728,8 @@ mutation CreateOrder {
       pincode: "10001"
       latitude: 40.7128
       longitude: -74.0060
+      paymentMethod: CASH
+      couponCode: "SAVE10"
     }
   ) {
     id
@@ -1465,6 +1741,8 @@ mutation CreateOrder {
     paymentStatus
     latitude
     longitude
+    couponId
+    discountAmount
     user {
       id
       firstName
@@ -1497,6 +1775,8 @@ query GetAllOrders {
     status
     paymentMethod
     paymentStatus
+    couponId
+    discountAmount
     user {
       id
       firstName
@@ -1528,6 +1808,8 @@ query GetMyOrders {
     status
     paymentMethod
     paymentStatus
+    couponId
+    discountAmount
     items {
       id
       quantity
@@ -1553,6 +1835,8 @@ query GetOrder {
     status
     paymentMethod
     paymentStatus
+    couponId
+    discountAmount
     user {
       id
       firstName
@@ -1608,12 +1892,7 @@ query GetSellerOrders {
 
 ```graphql
 mutation UpdateOrderStatus {
-  updateOrderStatus(
-    input: {
-      orderId: "ORDER_ID_HERE"
-      status: "CONFIRMED"
-    }
-  ) {
+  updateOrderStatus(input: { orderId: "ORDER_ID_HERE", status: "CONFIRMED" }) {
     id
     totalAmount
     deliveryCharge
@@ -1689,22 +1968,11 @@ query DownloadOrderPdf {
 }
 ```
 
-**Response:** Returns a base64 encoded string of the PDF file.
-
-## Complete Order Flow Example
-
-Here's a complete example of the order flow from cart to order:
-
 ### Step 1: Add items to cart
+
 ```graphql
 mutation AddToCart {
-  addToCart(
-    input: {
-      productId: "PRODUCT_ID_1"
-      quantity: 2
-      price: 999.99
-    }
-  ) {
+  addToCart(input: { productId: "PRODUCT_ID_1", quantity: 2, price: 999.99 }) {
     id
     totalAmount
     totalItems
@@ -1719,6 +1987,7 @@ mutation AddToCart {
 ```
 
 ### Step 2: View cart
+
 ```graphql
 query GetCart {
   getCart {
@@ -1736,6 +2005,7 @@ query GetCart {
 ```
 
 ### Step 3: Create order
+
 ```graphql
 mutation CreateOrder {
   createOrder(
@@ -1745,6 +2015,8 @@ mutation CreateOrder {
       state: "NY"
       country: "USA"
       pincode: "10001"
+      paymentMethod: CASH_ON_DELIVERY
+      couponCode: "SAVE10"
     }
   ) {
     id
@@ -1753,11 +2025,14 @@ mutation CreateOrder {
     status
     paymentMethod
     paymentStatus
+    couponId
+    discountAmount
   }
 }
 ```
 
 ### Step 4: View my orders
+
 ```graphql
 query GetMyOrders {
   getMyOrders {
@@ -1772,14 +2047,10 @@ query GetMyOrders {
 ```
 
 ### Step 5: Update order status (if admin)
+
 ```graphql
 mutation UpdateOrderStatus {
-  updateOrderStatus(
-    input: {
-      orderId: "ORDER_ID_HERE"
-      status: 2
-    }
-  ) {
+  updateOrderStatus(input: { orderId: "ORDER_ID_HERE", status: 2 }) {
     id
     status
     paymentStatus
@@ -1792,6 +2063,7 @@ mutation UpdateOrderStatus {
 ### 50) Create Delivery Profile
 
 **Mutation:**
+
 ```graphql
 mutation CreateDeliveryProfile {
   createDeliveryProfile(
@@ -1837,6 +2109,7 @@ mutation CreateDeliveryProfile {
 ### 51) Get All Delivery Profiles
 
 **Query:**
+
 ```graphql
 query GetDeliveryProfiles {
   getDeliveryProfiles {
@@ -1867,6 +2140,7 @@ query GetDeliveryProfiles {
 ### 52) Get Delivery Profile by ID
 
 **Query:**
+
 ```graphql
 query GetDeliveryProfile {
   getDeliveryProfile(id: "PROFILE_ID_HERE") {
@@ -1897,6 +2171,7 @@ query GetDeliveryProfile {
 ### 53) Update Delivery Profile
 
 **Mutation:**
+
 ```graphql
 mutation UpdateDeliveryProfile {
   updateDeliveryProfile(
@@ -1946,6 +2221,7 @@ mutation UpdateDeliveryProfile {
 Here's a complete example of the delivery profile management flow:
 
 ### Step 1: Create a delivery profile
+
 ```graphql
 mutation CreateDeliveryProfile {
   createDeliveryProfile(
@@ -1971,6 +2247,7 @@ mutation CreateDeliveryProfile {
 ```
 
 ### Step 2: View all delivery profiles
+
 ```graphql
 query GetDeliveryProfiles {
   getDeliveryProfiles {
@@ -1985,14 +2262,10 @@ query GetDeliveryProfiles {
 ```
 
 ### Step 3: Update availability status
+
 ```graphql
 mutation UpdateDeliveryProfile {
-  updateDeliveryProfile(
-    input: {
-      id: "PROFILE_ID_HERE"
-      isAvailable: false
-    }
-  ) {
+  updateDeliveryProfile(input: { id: "PROFILE_ID_HERE", isAvailable: false }) {
     id
     vehicleType
     isAvailable
@@ -2005,13 +2278,10 @@ mutation UpdateDeliveryProfile {
 ### 54) Accept Delivery Assignment
 
 **Mutation:**
+
 ```graphql
 mutation AcceptDelivery {
-  acceptDelivery(
-    input: {
-      assignmentId: "ASSIGNMENT_ID_HERE"
-    }
-  ) {
+  acceptDelivery(input: { assignmentId: "ASSIGNMENT_ID_HERE" }) {
     id
     status
     distance
@@ -2036,13 +2306,11 @@ mutation AcceptDelivery {
 ### 55) Reject Delivery Assignment
 
 **Mutation:**
+
 ```graphql
 mutation RejectDelivery {
   rejectDelivery(
-    input: {
-      assignmentId: "ASSIGNMENT_ID_HERE"
-      reason: "Not available"
-    }
+    input: { assignmentId: "ASSIGNMENT_ID_HERE", reason: "Not available" }
   ) {
     id
     status
@@ -2066,6 +2334,7 @@ mutation RejectDelivery {
 ### 56) Get My Delivery Assignments
 
 **Query:**
+
 ```graphql
 query GetMyAssignments {
   getMyAssignments {
@@ -2100,6 +2369,7 @@ query GetMyAssignments {
 ### 57) Get Pending Assignment for Order.
 
 **Query:**
+
 ```graphql
 query GetPendingAssignment {
   getPendingAssignment(orderId: "ORDER_ID_HERE") {
@@ -2130,9 +2400,11 @@ query GetPendingAssignment {
 Here's a complete example of the delivery assignment flow:
 
 ### Step 1: Order is automatically assigned to nearest delivery person
+
 When an order is created, the system automatically assigns it to the nearest available delivery person based on latitude and longitude.
 
 ### Step 2: Delivery person views their assignments
+
 ```graphql
 query GetMyAssignments {
   getMyAssignments {
@@ -2153,13 +2425,10 @@ query GetMyAssignments {
 ```
 
 ### Step 3: Delivery person accepts the assignment
+
 ```graphql
 mutation AcceptDelivery {
-  acceptDelivery(
-    input: {
-      assignmentId: "ASSIGNMENT_ID_HERE"
-    }
-  ) {
+  acceptDelivery(input: { assignmentId: "ASSIGNMENT_ID_HERE" }) {
     id
     status
     order {
@@ -2171,16 +2440,15 @@ mutation AcceptDelivery {
 ```
 
 ### Step 4: If not accepted within 2 minutes, assignment expires and reassigns
+
 The system automatically checks every 30 seconds for expired assignments and reassigns them to the next nearest available delivery person.
 
 ### Step 5: Delivery person can reject assignment
+
 ```graphql
 mutation RejectDelivery {
   rejectDelivery(
-    input: {
-      assignmentId: "ASSIGNMENT_ID_HERE"
-      reason: "Too far"
-    }
+    input: { assignmentId: "ASSIGNMENT_ID_HERE", reason: "Too far" }
   ) {
     id
     status

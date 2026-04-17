@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Repository } from 'typeorm';
 import { Order } from '../orders/entity/order.entity';
+import { Payment } from './entity/payment.entity';
 import { PaymentGateway } from './payment.gateway';
 import { PaymentService } from './payment.service';
 import { PaymentStatus } from 'src/common/constant/status';
@@ -10,6 +11,7 @@ import { PaymentStatus } from 'src/common/constant/status';
 describe('PaymentService', () => {
   let service: PaymentService;
   let orderRepo: jest.Mocked<Repository<Order>>;
+  let paymentRepo: jest.Mocked<Repository<Payment>>;
   let stripe: jest.Mocked<any>;
   let paymentGateway: jest.Mocked<PaymentGateway>;
 
@@ -20,6 +22,14 @@ describe('PaymentService', () => {
     paymentIntentId: null,
     isPaid: false,
     user: { id: 'user-123', email: 'test@example.com' },
+    items: [
+      {
+        totalAmountWithTax: 100,
+        cgstAmount: 9,
+        sgstAmount: 9,
+        igstAmount: 0,
+      },
+    ],
   };
 
   const mockPaymentIntent = {
@@ -41,6 +51,14 @@ describe('PaymentService', () => {
           provide: getRepositoryToken(Order),
           useValue: {
             findOne: jest.fn(),
+            update: jest.fn().mockResolvedValue({ affected: 1, raw: [], generatedMaps: [] }),
+          },
+        },
+        {
+          provide: getRepositoryToken(Payment),
+          useValue: {
+            create: jest.fn(),
+            save: jest.fn().mockResolvedValue({}),
             update: jest.fn().mockResolvedValue({ affected: 1, raw: [], generatedMaps: [] }),
           },
         },
@@ -70,6 +88,7 @@ describe('PaymentService', () => {
 
     service = module.get<PaymentService>(PaymentService);
     orderRepo = module.get(getRepositoryToken(Order));
+    paymentRepo = module.get(getRepositoryToken(Payment));
     stripe = module.get('STRIPE_CLIENT');
     paymentGateway = module.get(PaymentGateway);
   });
@@ -99,6 +118,7 @@ describe('PaymentService', () => {
         description: 'Payment for order order-123',
         automatic_payment_methods: {
           enabled: true,
+          allow_redirects: 'never',
         },
       });
       expect(orderRepo.update).toHaveBeenCalledWith('order-123', {
@@ -191,6 +211,14 @@ describe('PaymentService', () => {
       const zeroAmountOrder = {
         ...mockOrder,
         totalAmount: 0,
+        items: [
+          {
+            totalAmountWithTax: 0,
+            cgstAmount: 0,
+            sgstAmount: 0,
+            igstAmount: 0,
+          },
+        ],
       };
       orderRepo.findOne.mockResolvedValue(zeroAmountOrder as any);
       stripe.paymentIntents.create.mockResolvedValue(mockPaymentIntent);
@@ -208,6 +236,14 @@ describe('PaymentService', () => {
       const largeAmountOrder = {
         ...mockOrder,
         totalAmount: 999999.99,
+        items: [
+          {
+            totalAmountWithTax: 999999.99,
+            cgstAmount: 0,
+            sgstAmount: 0,
+            igstAmount: 0,
+          },
+        ],
       };
       orderRepo.findOne.mockResolvedValue(largeAmountOrder as any);
       stripe.paymentIntents.create.mockResolvedValue(mockPaymentIntent);
@@ -225,6 +261,14 @@ describe('PaymentService', () => {
       const fractionalOrder = {
         ...mockOrder,
         totalAmount: 99.99,
+        items: [
+          {
+            totalAmountWithTax: 99.99,
+            cgstAmount: 0,
+            sgstAmount: 0,
+            igstAmount: 0,
+          },
+        ],
       };
       orderRepo.findOne.mockResolvedValue(fractionalOrder as any);
       stripe.paymentIntents.create.mockResolvedValue(mockPaymentIntent);
@@ -241,13 +285,13 @@ describe('PaymentService', () => {
     it('should throw error when orderId is null', async () => {
       orderRepo.findOne.mockResolvedValue(null);
       await expect(service.createPaymentIntent(null as any)).rejects.toThrow(NotFoundException);
-      expect(orderRepo.findOne).toHaveBeenCalledWith({ where: { id: null }, relations: ['user'] });
+      expect(orderRepo.findOne).toHaveBeenCalledWith({ where: { id: null }, relations: ['user', 'items'] });
     });
 
     it('should throw error when orderId is undefined', async () => {
       orderRepo.findOne.mockResolvedValue(null);
       await expect(service.createPaymentIntent(undefined as any)).rejects.toThrow(NotFoundException);
-      expect(orderRepo.findOne).toHaveBeenCalledWith({ where: { id: undefined }, relations: ['user'] });
+      expect(orderRepo.findOne).toHaveBeenCalledWith({ where: { id: undefined }, relations: ['user', 'items'] });
     });
 
     it('should throw error when orderId is empty string', async () => {
@@ -255,6 +299,91 @@ describe('PaymentService', () => {
 
       await expect(service.createPaymentIntent('')).rejects.toThrow(
         NotFoundException,
+      );
+    });
+
+    it('should handle paymentRepo save error during payment intent creation', async () => {
+      const orderWithItems = {
+        ...mockOrder,
+        items: [
+          {
+            totalAmountWithTax: 100,
+            cgstAmount: 9,
+            sgstAmount: 9,
+            igstAmount: 0,
+          },
+        ],
+      };
+      orderRepo.findOne.mockResolvedValue(orderWithItems as any);
+      stripe.paymentIntents.create.mockResolvedValue(mockPaymentIntent);
+      paymentRepo.save.mockRejectedValue(new Error('Database error'));
+
+      await expect(service.createPaymentIntent('order-123')).rejects.toThrow(
+        'Database error',
+      );
+    });
+
+    it('should handle paymentRepo update error during payment intent creation', async () => {
+      orderRepo.findOne.mockResolvedValue(mockOrder as any);
+      stripe.paymentIntents.create.mockResolvedValue(mockPaymentIntent);
+      orderRepo.update.mockRejectedValueOnce(new Error('Database error'));
+
+      await expect(service.createPaymentIntent('order-123')).rejects.toThrow(
+        'Database error',
+      );
+    });
+
+    it('should calculate tax amounts correctly from order items', async () => {
+      const orderWithItems = {
+        ...mockOrder,
+        items: [
+          {
+            totalAmountWithTax: 50,
+            cgstAmount: 4.5,
+            sgstAmount: 4.5,
+            igstAmount: 0,
+          },
+          {
+            totalAmountWithTax: 75,
+            cgstAmount: 6.75,
+            sgstAmount: 6.75,
+            igstAmount: 0,
+          },
+        ],
+      };
+      orderRepo.findOne.mockResolvedValue(orderWithItems as any);
+      stripe.paymentIntents.create.mockResolvedValue(mockPaymentIntent);
+
+      await service.createPaymentIntent('order-123');
+
+      expect(stripe.paymentIntents.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          amount: 12500,
+        }),
+      );
+    });
+
+    it('should handle order items with null tax amounts', async () => {
+      const orderWithItems = {
+        ...mockOrder,
+        items: [
+          {
+            totalAmountWithTax: null,
+            cgstAmount: null,
+            sgstAmount: null,
+            igstAmount: null,
+          },
+        ],
+      };
+      orderRepo.findOne.mockResolvedValue(orderWithItems as any);
+      stripe.paymentIntents.create.mockResolvedValue(mockPaymentIntent);
+
+      await service.createPaymentIntent('order-123');
+
+      expect(stripe.paymentIntents.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          amount: 0,
+        }),
       );
     });
   });
@@ -606,6 +735,67 @@ describe('PaymentService', () => {
         amount: -1000,
       });
     });
+
+    it('should handle paymentRepo update error during refund', async () => {
+      const paidOrder = {
+        ...mockOrder,
+        isPaid: true,
+        paymentIntentId: 'pi_123',
+      };
+      orderRepo.findOne.mockResolvedValue(paidOrder as any);
+      stripe.refunds.create.mockResolvedValue({ id: 're_123' });
+      paymentRepo.update.mockRejectedValue(new Error('Database error'));
+
+      await expect(service.refundPayment('order-123')).rejects.toThrow(
+        'Database error',
+      );
+    });
+
+    it('should update payment record with correct refund details', async () => {
+      const paidOrder = {
+        ...mockOrder,
+        isPaid: true,
+        paymentIntentId: 'pi_123',
+        totalAmount: 100,
+      };
+      orderRepo.findOne.mockResolvedValue(paidOrder as any);
+      stripe.refunds.create.mockResolvedValue({ id: 're_123' });
+
+      await service.refundPayment('order-123', 50);
+
+      expect(paymentRepo.update).toHaveBeenCalledWith(
+        { paymentIntentId: 'pi_123' },
+        {
+          status: PaymentStatus.REFUNDED,
+          isRefunded: true,
+          refundId: 're_123',
+          refundAmount: 50,
+        },
+      );
+    });
+
+    it('should update payment record with full amount when partial amount not provided', async () => {
+      const paidOrder = {
+        ...mockOrder,
+        isPaid: true,
+        paymentIntentId: 'pi_123',
+        totalAmount: 100,
+      };
+      orderRepo.findOne.mockResolvedValue(paidOrder as any);
+      stripe.refunds.create.mockResolvedValue({ id: 're_123' });
+
+      await service.refundPayment('order-123');
+
+      expect(paymentRepo.update).toHaveBeenCalledWith(
+        { paymentIntentId: 'pi_123' },
+        {
+          status: PaymentStatus.REFUNDED,
+          isRefunded: true,
+          refundId: 're_123',
+          refundAmount: 100,
+        },
+      );
+    });
   });
 
   describe('handleWebhook', () => {
@@ -847,6 +1037,63 @@ describe('PaymentService', () => {
       expect(paymentGateway.notifyPaymentStatus).not.toHaveBeenCalled();
     });
 
+    it('should handle paymentRepo update error in payment_intent.succeeded', async () => {
+      const event = {
+        type: 'payment_intent.succeeded',
+        data: {
+          object: {
+            ...mockPaymentIntent,
+            metadata: {
+              orderId: 'order-123',
+              userId: 'user-123',
+            },
+          },
+        },
+      };
+      paymentRepo.update.mockRejectedValue(new Error('Database error'));
+
+      await expect(service.handleWebhook(event)).rejects.toThrow('Database error');
+    });
+
+    it('should handle paymentRepo update error in payment_intent.payment_failed', async () => {
+      const event = {
+        type: 'payment_intent.payment_failed',
+        data: {
+          object: {
+            ...mockPaymentIntent,
+            last_payment_error: {
+              message: 'Card declined',
+            },
+            metadata: {
+              orderId: 'order-123',
+              userId: 'user-123',
+            },
+          },
+        },
+      };
+      paymentRepo.update.mockRejectedValue(new Error('Database error'));
+
+      await expect(service.handleWebhook(event)).rejects.toThrow('Database error');
+    });
+
+    it('should handle paymentRepo update error in payment_intent.canceled', async () => {
+      const event = {
+        type: 'payment_intent.canceled',
+        data: {
+          object: {
+            ...mockPaymentIntent,
+            metadata: {
+              orderId: 'order-123',
+              userId: 'user-123',
+            },
+          },
+        },
+      };
+      paymentRepo.update.mockRejectedValue(new Error('Database error'));
+
+      await expect(service.handleWebhook(event)).rejects.toThrow('Database error');
+    });
+
     it('should propagate errors from webhook handlers', async () => {
       const event = {
         type: 'payment_intent.succeeded',
@@ -932,6 +1179,21 @@ describe('PaymentService', () => {
     it('should handle null payment intent', async () => {
       await expect((service as any).handlePaymentSuccess(null)).rejects.toThrow();
     });
+
+    it('should handle paymentRepo update error in handlePaymentSuccess', async () => {
+      const paymentIntent = {
+        ...mockPaymentIntent,
+        metadata: {
+          orderId: 'order-123',
+          userId: 'user-123',
+        },
+      };
+      paymentRepo.update.mockRejectedValue(new Error('Database error'));
+
+      await expect((service as any).handlePaymentSuccess(paymentIntent)).rejects.toThrow(
+        'Database error',
+      );
+    });
   });
 
   describe('handlePaymentFailure (private)', () => {
@@ -1004,6 +1266,24 @@ describe('PaymentService', () => {
     it('should handle null payment intent', async () => {
       await expect((service as any).handlePaymentFailure(null)).rejects.toThrow();
     });
+
+    it('should handle paymentRepo update error in handlePaymentFailure', async () => {
+      const paymentIntent = {
+        ...mockPaymentIntent,
+        last_payment_error: {
+          message: 'Insufficient funds',
+        },
+        metadata: {
+          orderId: 'order-123',
+          userId: 'user-123',
+        },
+      };
+      paymentRepo.update.mockRejectedValue(new Error('Database error'));
+
+      await expect((service as any).handlePaymentFailure(paymentIntent)).rejects.toThrow(
+        'Database error',
+      );
+    });
   });
 
   describe('handlePaymentCancellation (private)', () => {
@@ -1047,6 +1327,247 @@ describe('PaymentService', () => {
 
     it('should handle null payment intent', async () => {
       await expect((service as any).handlePaymentCancellation(null)).rejects.toThrow();
+    });
+
+    it('should handle paymentRepo update error in handlePaymentCancellation', async () => {
+      const paymentIntent = {
+        ...mockPaymentIntent,
+        metadata: {
+          orderId: 'order-123',
+          userId: 'user-123',
+        },
+      };
+      paymentRepo.update.mockRejectedValue(new Error('Database error'));
+
+      await expect((service as any).handlePaymentCancellation(paymentIntent)).rejects.toThrow(
+        'Database error',
+      );
+    });
+  });
+
+  describe('PaymentResolver', () => {
+    let paymentResolver: any;
+    let paymentService: jest.Mocked<PaymentService>;
+
+    beforeEach(async () => {
+      paymentService = {
+        createPaymentIntent: jest.fn(),
+        refundPayment: jest.fn(),
+      } as any;
+
+      const { PaymentResolver } = require('./payment.resolver');
+      paymentResolver = new PaymentResolver(paymentService);
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    describe('createPaymentIntent', () => {
+      it('should successfully create payment intent with valid orderId and user context', async () => {
+        const mockContext = {
+          req: {
+            user: { userId: 'user-123', email: 'test@example.com' },
+          },
+        };
+        const mockResult = {
+          clientSecret: 'secret_123',
+          paymentIntentId: 'pi_123',
+        };
+        paymentService.createPaymentIntent.mockResolvedValue(mockResult);
+
+        const result = await paymentResolver.createPaymentIntent(
+          'order-123',
+          mockContext,
+        );
+
+        expect(result).toEqual(mockResult);
+        expect(paymentService.createPaymentIntent).toHaveBeenCalledWith('order-123');
+      });
+
+      it('should propagate errors from payment service', async () => {
+        const mockContext = {
+          req: {
+            user: { userId: 'user-123' },
+          },
+        };
+        paymentService.createPaymentIntent.mockRejectedValue(
+          new NotFoundException('Order not found'),
+        );
+
+        await expect(
+          paymentResolver.createPaymentIntent('order-123', mockContext),
+        ).rejects.toThrow(NotFoundException);
+      });
+
+      it('should handle missing user in context', async () => {
+        const mockContext = {
+          req: {},
+        };
+        paymentService.createPaymentIntent.mockResolvedValue({
+          clientSecret: 'secret_123',
+          paymentIntentId: 'pi_123',
+        });
+
+        const result = await paymentResolver.createPaymentIntent(
+          'order-123',
+          mockContext,
+        );
+
+        expect(result).toBeDefined();
+      });
+
+      it('should handle null orderId', async () => {
+        const mockContext = {
+          req: { user: { userId: 'user-123' } },
+        };
+        paymentService.createPaymentIntent.mockRejectedValue(
+          new Error('Invalid order ID'),
+        );
+
+        await expect(
+          paymentResolver.createPaymentIntent(null, mockContext),
+        ).rejects.toThrow();
+      });
+
+      it('should handle empty string orderId', async () => {
+        const mockContext = {
+          req: { user: { userId: 'user-123' } },
+        };
+        paymentService.createPaymentIntent.mockRejectedValue(
+          new Error('Invalid order ID'),
+        );
+
+        await expect(
+          paymentResolver.createPaymentIntent('', mockContext),
+        ).rejects.toThrow();
+      });
+
+      it('should handle undefined orderId', async () => {
+        const mockContext = {
+          req: { user: { userId: 'user-123' } },
+        };
+        paymentService.createPaymentIntent.mockRejectedValue(
+          new Error('Invalid order ID'),
+        );
+
+        await expect(
+          paymentResolver.createPaymentIntent(undefined, mockContext),
+        ).rejects.toThrow();
+      });
+    });
+
+    describe('refundPayment', () => {
+      it('should successfully refund full payment without amount', async () => {
+        const mockContext = {
+          req: { user: { userId: 'user-123' } },
+        };
+        paymentService.refundPayment.mockResolvedValue({ refundId: 're_123' });
+
+        const result = await paymentResolver.refundPayment(
+          'order-123',
+          undefined,
+          mockContext,
+        );
+
+        expect(result).toBe(true);
+        expect(paymentService.refundPayment).toHaveBeenCalledWith('order-123', undefined);
+      });
+
+      it('should successfully refund partial payment with amount', async () => {
+        const mockContext = {
+          req: { user: { userId: 'user-123' } },
+        };
+        paymentService.refundPayment.mockResolvedValue({ refundId: 're_123' });
+
+        const result = await paymentResolver.refundPayment('order-123', 50, mockContext);
+
+        expect(result).toBe(true);
+        expect(paymentService.refundPayment).toHaveBeenCalledWith('order-123', 50);
+      });
+
+      it('should propagate errors from payment service', async () => {
+        const mockContext = {
+          req: { user: { userId: 'user-123' } },
+        };
+        paymentService.refundPayment.mockRejectedValue(
+          new BadRequestException('Order not paid'),
+        );
+
+        await expect(
+          paymentResolver.refundPayment('order-123', undefined, mockContext),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('should handle null orderId', async () => {
+        const mockContext = {
+          req: { user: { userId: 'user-123' } },
+        };
+        paymentService.refundPayment.mockRejectedValue(new Error('Invalid order ID'));
+
+        await expect(
+          paymentResolver.refundPayment(null, undefined, mockContext),
+        ).rejects.toThrow();
+      });
+
+      it('should handle empty string orderId', async () => {
+        const mockContext = {
+          req: { user: { userId: 'user-123' } },
+        };
+        paymentService.refundPayment.mockRejectedValue(new Error('Invalid order ID'));
+
+        await expect(
+          paymentResolver.refundPayment('', undefined, mockContext),
+        ).rejects.toThrow();
+      });
+
+      it('should handle negative refund amount', async () => {
+        const mockContext = {
+          req: { user: { userId: 'user-123' } },
+        };
+        paymentService.refundPayment.mockResolvedValue({ refundId: 're_123' });
+
+        const result = await paymentResolver.refundPayment('order-123', -10, mockContext);
+
+        expect(result).toBe(true);
+        expect(paymentService.refundPayment).toHaveBeenCalledWith('order-123', -10);
+      });
+
+      it('should handle zero refund amount', async () => {
+        const mockContext = {
+          req: { user: { userId: 'user-123' } },
+        };
+        paymentService.refundPayment.mockResolvedValue({ refundId: 're_123' });
+
+        const result = await paymentResolver.refundPayment('order-123', 0, mockContext);
+
+        expect(result).toBe(true);
+        expect(paymentService.refundPayment).toHaveBeenCalledWith('order-123', 0);
+      });
+
+      it('should handle very large refund amount', async () => {
+        const mockContext = {
+          req: { user: { userId: 'user-123' } },
+        };
+        paymentService.refundPayment.mockResolvedValue({ refundId: 're_123' });
+
+        const result = await paymentResolver.refundPayment(
+          'order-123',
+          999999.99,
+          mockContext,
+        );
+
+        expect(result).toBe(true);
+        expect(paymentService.refundPayment).toHaveBeenCalledWith('order-123', 999999.99);
+      });
+
+      it('should handle missing context parameter', async () => {
+        paymentService.refundPayment.mockResolvedValue({ refundId: 're_123' });
+
+        const result = await paymentResolver.refundPayment('order-123', 50, undefined);
+
+        expect(result).toBe(true);
+      });
     });
   });
 });

@@ -26,16 +26,29 @@ export enum paymentMethod{
   ONLINE_PAYMENT = 2,
 }
 
-export enum NotificationType {
-  ORDER_PLACED = 1,
-  ORDER_STATUS = 2,
-  ORDER_ASSIGNED = 3,
-}
-
 export enum AssignmentStatus {
   PENDING = 1,
   ACCEPTED = 2,
   REJECTED = 3,
   EXPIRED = 4,
+}
+
+export enum NotificationType {
+  ORDER_CREATED = 'ORDER_CREATED',
+  ORDER_STATUS_CHANGED = 'ORDER_STATUS_CHANGED',
+  ORDER_CANCELLED = 'ORDER_CANCELLED',
+  ORDER_DELIVERED = 'ORDER_DELIVERED',
+  PAYMENT_SUCCESSFUL = 'PAYMENT_SUCCESSFUL',
+  PAYMENT_FAILED = 'PAYMENT_FAILED',
+}
+
+export enum NotificationStatus {
+  UNREAD = 'UNREAD',
+  READ = 'READ',
+}
+
+export enum DiscountType {
+  PERCENTAGE = 'PERCENTAGE',
+  FIXED = 'FIXED',
 }
 

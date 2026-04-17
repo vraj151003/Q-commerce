@@ -87,6 +87,18 @@ export class Payment {
   @Column({ nullable: true })
   failureReason: string;
 
+  @Field({ nullable: true })
+  @Column({ type: 'numeric', nullable: true, default: 0 })
+  cgstAmount: number;
+
+  @Field({ nullable: true })
+  @Column({ type: 'numeric', nullable: true, default: 0 })
+  sgstAmount: number;
+
+  @Field({ nullable: true })
+  @Column({ type: 'numeric', nullable: true, default: 0 })
+  igstAmount: number;
+
   @CreateDateColumn()
   createdAt: Date;
 

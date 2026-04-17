@@ -106,6 +106,14 @@ export class Order {
   @Column({ nullable: true })
   paymentIntentId: string;
 
+  @Field(() => String, { nullable: true })
+  @Column({ type: 'varchar', nullable: true })
+  couponId: string | null;
+
+  @Field(() => Number, { nullable: true })
+  @Column({ type: 'numeric', nullable: true })
+  discountAmount: number | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -6,8 +6,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from '../orders/entity/order.entity';
+import { Payment } from './entity/payment.entity';
 import { Repository } from 'typeorm';
-import { PaymentStatus } from 'src/common/constant/status';
+import { PaymentStatus, paymentMethod } from 'src/common/constant/status';
 import { PaymentGateway } from './payment.gateway';
 
 @Injectable()
@@ -15,6 +16,9 @@ export class PaymentService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepo: Repository<Order>,
+
+    @InjectRepository(Payment)
+    private readonly paymentRepo: Repository<Payment>,
 
     @Inject('STRIPE_CLIENT')
     private stripe: any,
@@ -28,7 +32,7 @@ export class PaymentService {
   }> {
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
-      relations: ['user'],
+      relations: ['user', 'items'],
     });
     if (!order) {
       throw new NotFoundException('Order Not Found');
@@ -37,8 +41,14 @@ export class PaymentService {
       throw new BadRequestException('payment already processed');
     }
 
+    // Calculate total amount with tax from order items
+    const totalAmountWithTax = order.items.reduce((sum, item) => sum + Number(item.totalAmountWithTax || 0), 0);
+    const totalCGST = order.items.reduce((sum, item) => sum + Number(item.cgstAmount || 0), 0);
+    const totalSGST = order.items.reduce((sum, item) => sum + Number(item.sgstAmount || 0), 0);
+    const totalIGST = order.items.reduce((sum, item) => sum + Number(item.igstAmount || 0), 0);
+
     const paymentIntent = await this.stripe.paymentIntents.create({
-      amount: Math.round(order.totalAmount * 100),
+      amount: Math.round(totalAmountWithTax * 100),
       currency: 'usd',
       metadata: {
         orderId: order.id,
@@ -50,6 +60,26 @@ export class PaymentService {
         allow_redirects: 'never',
       },
     });
+
+    // Create Payment record
+    const payment = this.paymentRepo.create({
+      amount: totalAmountWithTax,
+      currency: 'usd',
+      status: PaymentStatus.PROCESSING,
+      paymentMethod: paymentMethod.ONLINE_PAYMENT,
+      paymentIntentId: paymentIntent.id,
+      clientSecret: paymentIntent.client_secret,
+      metadata: {
+        orderId: order.id,
+        userId: order.user.id,
+      },
+      cgstAmount: totalCGST,
+      sgstAmount: totalSGST,
+      igstAmount: totalIGST,
+      user: order.user,
+      order: order,
+    });
+    await this.paymentRepo.save(payment);
 
     await this.orderRepo.update(order.id, {
       paymentIntentId: paymentIntent.id,
@@ -124,6 +154,17 @@ export class PaymentService {
       isPaid : false,
     })
 
+    // Update Payment record
+    await this.paymentRepo.update(
+      { paymentIntentId: order.paymentIntentId },
+      {
+        status: PaymentStatus.REFUNDED,
+        isRefunded: true,
+        refundId: refund.id,
+        refundAmount: amount || order.totalAmount,
+      },
+    )
+
     return { refundId: refund.id };
   }
 
@@ -161,6 +202,14 @@ export class PaymentService {
       isPaid: true,
     });
 
+    // Update Payment record
+    await this.paymentRepo.update(
+      { paymentIntentId: paymentIntent.id },
+      {
+        status: PaymentStatus.COMPLETED,
+      },
+    );
+
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
       relations: ['user'],
@@ -183,6 +232,15 @@ export class PaymentService {
       paymentStatus: PaymentStatus.FAILED,
       isPaid: false,
     });
+
+    // Update Payment record
+    await this.paymentRepo.update(
+      { paymentIntentId: paymentIntent.id },
+      {
+        status: PaymentStatus.FAILED,
+        failureReason: paymentIntent.last_payment_error?.message || 'Payment failed',
+      },
+    );
 
     const order = await this.orderRepo.findOne({
       where: { id: orderId },
@@ -207,6 +265,15 @@ export class PaymentService {
       paymentStatus: PaymentStatus.FAILED,
       isPaid: false,
     });
+
+    // Update Payment record
+    await this.paymentRepo.update(
+      { paymentIntentId: paymentIntent.id },
+      {
+        status: PaymentStatus.FAILED,
+        failureReason: 'Payment cancelled',
+      },
+    );
 
     const order = await this.orderRepo.findOne({
       where: { id: orderId },

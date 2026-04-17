@@ -219,6 +219,12 @@ type OrderItem {
   price: Float!
   totalPrice: Float!
   productId: String!
+  cgstAmount: Float
+  sgstAmount: Float
+  igstAmount: Float
+  gstRate: Float
+  totalAmountWithTax: Float
+  sellerState: String
 }
 
 type Order {
@@ -239,6 +245,8 @@ type Order {
   longitude: Float
   user: User!
   items: [OrderItem!]!
+  couponId: String
+  discountAmount: Float
 }
 
 type PaginatedUsersResponse {
@@ -294,6 +302,71 @@ type DeliveryAssignment {
   expiresAt: DateTime!
 }
 
+type Tax {
+  id: ID!
+  category: Category!
+  categoryId: String!
+  taxRate: Float!
+  description: String
+  isActive: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Notification {
+  id: ID!
+  type: NotificationType!
+  title: String!
+  message: String!
+  status: NotificationStatus!
+  user: User!
+  order: Order
+  sellerId: String
+  createdAt: DateTime!
+  metadata: String
+}
+
+enum NotificationType {
+  ORDER_CREATED
+  ORDER_STATUS_CHANGED
+  ORDER_CANCELLED
+  ORDER_DELIVERED
+  PAYMENT_SUCCESSFUL
+  PAYMENT_FAILED
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+}
+
+type Coupon {
+  id: ID!
+  code: String!
+  discountType: DiscountType!
+  discountValue: Float!
+  maxDiscountAmount: Float
+  minOrderAmount: Float
+  startDate: String
+  expiryDate: String
+  usageLimit: Float!
+  usageCount: Float!
+  isActive: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+type ApplyCouponResponse {
+  coupon: Coupon!
+  discountAmount: Float!
+  finalAmount: Float!
+}
+
 type CreatePaymentIntentResponse {
   clientSecret: String!
   paymentIntentId: String!
@@ -324,6 +397,30 @@ type Query {
   getSellerOrders: [Order!]!
   getMyAssignments: [DeliveryAssignment!]!
   getPendingAssignment(orderId: String!): DeliveryAssignment
+  getTaxes: [Tax!]!
+  getTax(id: String!): Tax!
+  getTaxByCategory(categoryId: String!): Tax
+
+  """Get all notifications for current user"""
+  getNotifications: [Notification!]!
+
+  """Get unread notifications for current user"""
+  getUnreadNotifications: [Notification!]!
+
+  """Get a single notification by ID"""
+  getNotification(id: String!): Notification!
+
+  """Get unread notification count for current user"""
+  getUnreadCount: Float!
+
+  """Get all coupons (admin only)"""
+  getCoupons: [Coupon!]!
+
+  """Get a single coupon by ID (admin only)"""
+  getCoupon(id: String!): Coupon!
+
+  """Get coupon by code"""
+  getCouponByCode(code: String!): Coupon!
   getDeliveryProfiles: [DeliveryProfile!]!
   getDeliveryProfile(id: String!): DeliveryProfile!
 }
@@ -398,6 +495,33 @@ type Mutation {
   updateOrder(id: String!, data: CreateOrderInput!): Order!
   acceptDelivery(input: AcceptDeliveryInput!): DeliveryAssignment!
   rejectDelivery(input: RejectDeliveryInput!): DeliveryAssignment!
+  createTax(input: CreateTaxInput!): Tax!
+  updateTax(input: UpdateTaxInput!): Tax!
+  deleteTax(id: String!): Boolean!
+
+  """Mark a notification as read"""
+  markNotificationAsRead(id: String!): Notification!
+
+  """Mark all notifications as read"""
+  markAllNotificationsAsRead: Boolean!
+
+  """Delete a notification"""
+  deleteNotification(id: String!): Boolean!
+
+  """Create a new notification (admin only)"""
+  createNotification(input: CreateNotificationInput!): Notification!
+
+  """Create a new coupon (admin only)"""
+  createCoupon(input: CreateCouponInput!): Coupon!
+
+  """Update a coupon (admin only)"""
+  updateCoupon(id: String!, input: UpdateCouponInput!): Coupon!
+
+  """Delete a coupon (admin only)"""
+  deleteCoupon(id: String!): Boolean!
+
+  """Apply coupon code to order"""
+  applyCoupon(input: ApplyCouponInput!): ApplyCouponResponse!
   createDeliveryProfile(input: CreateDeliveryProfileInput!): DeliveryProfile!
   updateDeliveryProfile(input: UpdateDeliveryProfileInput!): DeliveryProfile!
 
@@ -580,6 +704,7 @@ input CreateOrderInput {
   latitude: Float
   longitude: Float
   paymentMethod: paymentMethod!
+  couponCode: String
 }
 
 """Available payment methods for a payment record"""
@@ -600,6 +725,58 @@ input AcceptDeliveryInput {
 input RejectDeliveryInput {
   assignmentId: String!
   reason: String
+}
+
+input CreateTaxInput {
+  categoryId: String!
+  taxRate: Float!
+  description: String
+}
+
+input UpdateTaxInput {
+  id: String!
+  taxRate: Float
+  description: String
+  isActive: Boolean
+}
+
+input CreateNotificationInput {
+  type: NotificationType!
+  title: String!
+  message: String!
+  userId: String!
+  orderId: String
+  sellerId: String
+  metadata: String
+}
+
+input CreateCouponInput {
+  code: String!
+  discountType: DiscountType!
+  discountValue: Float!
+  maxDiscountAmount: Float
+  minOrderAmount: Float
+  startDate: DateTime
+  expiryDate: DateTime
+  usageLimit: Float = 0
+  isActive: Boolean = true
+}
+
+input UpdateCouponInput {
+  code: String
+  discountType: DiscountType
+  discountValue: Float
+  maxDiscountAmount: Float
+  minOrderAmount: Float
+  startDate: DateTime
+  expiryDate: DateTime
+  usageLimit: Float
+  isActive: Boolean
+}
+
+input ApplyCouponInput {
+  code: String!
+  orderAmount: Float!
 }
 
 input CreateDeliveryProfileInput {
