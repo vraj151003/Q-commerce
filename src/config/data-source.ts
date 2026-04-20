@@ -11,6 +11,8 @@ import { DeliveryProfile } from '../modules/delivery-profile/entity/delivery-pro
 import { Order } from '../modules/orders/entity/order.entity';
 import { OrderItem } from '../modules/orders/entity/order-item.entity';
 import { Payment } from '../modules/payment/entity/payment.entity';
+import { ProductReview } from '../modules/reviews/entity/product-review.entity';
+import { SellerReview } from '../modules/reviews/entity/seller-review.entity';
 
 export default new DataSource({
   type: 'postgres',
@@ -19,7 +21,7 @@ export default new DataSource({
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'testdb',
-  entities: [User, Role, Permission, Shop, Category, SubCategory, Product, DeliveryProfile, Order, OrderItem, Payment],
+  entities: [User, Role, Permission, Shop, Category, SubCategory, Product, DeliveryProfile, Order, OrderItem, Payment, ProductReview, SellerReview],
   migrations: ['src/database/migrations/*{.ts,.js}'],
   synchronize: false,
 });

@@ -1478,6 +1478,50 @@ query GetProduct {
 }
 ```
 
+### 34) Search Products
+
+**Requires Permission:** `READ_PRODUCT`
+**Description:** Search products using Elasticsearch with fuzzy matching across name, description, category, subcategory, and shop.
+
+```graphql
+query SearchProducts {
+  searchProducts(query: "iPhone") {
+    id
+    name
+    description
+    mrp
+    sellingPrice
+    category
+    subCategory
+    shop
+    isAvailable
+    stockQuantity
+    score
+  }
+}
+```
+
+**Note:** This uses Elasticsearch for fast, fuzzy search across multiple product fields. Returns results with relevance score. The category, subCategory, and shop fields return string values (names) rather than full objects.
+
+### 35) Sync Products to Elasticsearch
+
+**Requires Permission:** `CREATE_PRODUCT`
+**Description:** Sync all existing products from database to Elasticsearch (Admin only).
+
+```graphql
+mutation SyncProducts {
+  syncProductsToElasticsearch {
+    indexed
+  }
+}
+```
+
+**Note:**
+
+- This mutation manually triggers a sync of all products to Elasticsearch.
+- An **automatic cron job** runs every 1 hour to sync products to Elasticsearch automatically.
+- Run this mutation after initial setup or when Elasticsearch data needs to be refreshed immediately.
+
 ### 34) Update Product
 
 **Requires Permission:** `UPDATE_PRODUCT`
@@ -2458,3 +2502,407 @@ mutation RejectDelivery {
   }
 }
 ```
+
+## Review/Rating System APIs
+
+### 58) Create Product Review
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Permission Required:** CREATE_REVIEW
+**Note:** Only users who have purchased the product can leave a review.
+
+```graphql
+mutation CreateProductReview {
+  createProductReview(
+    input: {
+      rating: 5
+      comment: "Great product! Highly recommended."
+      media: "https://example.com/review-image.jpg"
+      productId: "PRODUCT_ID_HERE"
+      orderId: "ORDER_ID_HERE"
+    }
+  ) {
+    id
+    rating
+    comment
+    media
+    user {
+      id
+      firstName
+      lastName
+    }
+    product {
+      id
+      name
+    }
+    order {
+      id
+      totalAmount
+    }
+    createdAt
+    updatedAt
+  }
+}
+```
+
+**Validation:**
+
+- Rating must be between 1 and 5 (decimal values allowed, e.g., 2.5, 3.7)
+- User must have purchased the product in the specified order
+- User can only review each product once per order
+
+### 59) Create Seller Review
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Permission Required:** CREATE_REVIEW
+**Note:** Only users who have purchased from the seller can leave a review.
+
+```graphql
+mutation CreateSellerReview {
+  createSellerReview(
+    input: {
+      rating: 4
+      comment: "Good delivery and packaging."
+      shopId: "SHOP_ID_HERE"
+      orderId: "ORDER_ID_HERE"
+    }
+  ) {
+    id
+    rating
+    comment
+    user {
+      id
+      firstName
+      lastName
+    }
+    shop {
+      id
+      shopName
+    }
+    order {
+      id
+      totalAmount
+    }
+    createdAt
+    updatedAt
+  }
+}
+```
+
+**Validation:**
+
+- Rating must be between 1 and 5 (decimal values allowed, e.g., 2.5, 3.7)
+- User must have placed the specified order
+- User can only review each seller once per order
+
+### 60) Get Product Reviews
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Permission Required:** READ_REVIEW
+
+```graphql
+query GetProductReviews {
+  getProductReviews(productId: "PRODUCT_ID_HERE") {
+    id
+    rating
+    comment
+    user {
+      id
+      firstName
+      lastName
+    }
+    product {
+      id
+      name
+    }
+    order {
+      id
+    }
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### 61) Get Product Average Rating
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Permission Required:** READ_REVIEW
+
+```graphql
+query GetProductAverageRating {
+  getProductAverageRating(productId: "PRODUCT_ID_HERE")
+}
+```
+
+**Response:** Returns a number representing the average rating (0 if no reviews exist).
+
+### 62) Get Seller Reviews
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Permission Required:** READ_REVIEW
+
+```graphql
+query GetSellerReviews {
+  getSellerReviews(shopId: "SHOP_ID_HERE") {
+    id
+    rating
+    comment
+    user {
+      id
+      firstName
+      lastName
+    }
+    shop {
+      id
+      name
+    }
+    order {
+      id
+    }
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### 63) Get Seller Average Rating
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Permission Required:** READ_REVIEW
+
+```graphql
+query GetSellerAverageRating {
+  getSellerAverageRating(shopId: "SHOP_ID_HERE")
+}
+```
+
+**Response:** Returns a number representing the average rating (0 if no reviews exist).
+
+### 64) Get My Product Reviews
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Permission Required:** READ_REVIEW
+
+```graphql
+query GetMyProductReviews {
+  getMyProductReviews {
+    id
+    rating
+    comment
+    product {
+      id
+      name
+    }
+    order {
+      id
+      totalAmount
+      createdAt
+    }
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### 65) Get My Seller Reviews
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Permission Required:** READ_REVIEW
+
+```graphql
+query GetMySellerReviews {
+  getMySellerReviews {
+    id
+    rating
+    comment
+    shop {
+      id
+      shopName
+    }
+    order {
+      id
+      totalAmount
+      createdAt
+    }
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### 66) Get All Product Reviews (Admin)
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Permission Required:** READ_REVIEW
+**Role Required:** Admin
+
+```graphql
+query GetAllProductReviews {
+  getAllProductReviews {
+    id
+    rating
+    comment
+    media
+    user {
+      id
+      firstName
+      lastName
+      email
+    }
+    product {
+      id
+      name
+    }
+    order {
+      id
+      totalAmount
+      createdAt
+    }
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### 67) Get All Seller Reviews (Admin)
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Permission Required:** READ_REVIEW
+**Role Required:** Admin
+
+```graphql
+query GetAllSellerReviews {
+  getAllSellerReviews {
+    id
+    rating
+    comment
+    user {
+      id
+      firstName
+      lastName
+      email
+    }
+    shop {
+      id
+      name
+    }
+    order {
+      id
+      totalAmount
+      createdAt
+    }
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### 68) Update Product Review
+
+**Requires Authentication:** Yes (JWT Token Required)
+**Permission Required:** UPDATE_REVIEW
+**Note:** Only the customer who created the review can update it.
+
+```graphql
+mutation UpdateProductReview {
+  updateProductReview(
+    input: {
+      id: "REVIEW_ID_HERE"
+      rating: 4
+      comment: "Updated review after using the product more."
+      media: "https://example.com/new-review-image.jpg"
+    }
+  ) {
+    id
+    rating
+    comment
+    media
+    user {
+      id
+      firstName
+      lastName
+    }
+    product {
+      id
+      name
+    }
+    order {
+      id
+    }
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### 69) Update Seller Review
+
+```graphql
+mutation UpdateSellerReview {
+  updateSellerReview(
+    input: {
+      id: ""
+      rating: 5
+      comment: "Updated review after another purchase."
+    }
+  ) {
+    id
+    rating
+    comment
+    user {
+      id
+      firstName
+      lastName
+    }
+    shop {
+      id
+      shopName
+    }
+    order {
+      id
+    }
+    createdAt
+    updatedAt
+  }
+}
+```
+
+### 70) Delete Product Review
+
+```graphql
+mutation DeleteProductReview {
+  deleteProductReview(id: "REVIEW_ID_HERE")
+}
+```
+
+### 71) Delete Seller Review
+
+```graphql
+mutation DeleteSellerReview {
+  deleteSellerReview(id: "REVIEW_ID_HERE")
+}
+```
+
+**Validation:**
+
+- Only the reviewer who created the review can delete it
+
+### 72) Admin Delete Product Review
+
+
+```graphql
+mutation AdminDeleteProductReview {
+  adminDeleteProductReview(id: "REVIEW_ID_HERE")
+}
+```
+
+
+### 73) Admin Delete Seller Review
+
+```graphql
+mutation AdminDeleteSellerReview {
+  adminDeleteSellerReview(id: "REVIEW_ID_HERE")
+}
+```
+

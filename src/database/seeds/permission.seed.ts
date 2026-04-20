@@ -56,6 +56,10 @@ export class PermissionSeed {
       { name: 'READ_COUPON' },
       { name: 'UPDATE_COUPON' },
       { name: 'DELETE_COUPON' },
+      { name: 'CREATE_REVIEW' },
+      { name: 'READ_REVIEW' },
+      { name: 'UPDATE_REVIEW' },
+      { name: 'DELETE_REVIEW' },
     ];
 
     for (const permission of permissions) {

@@ -12,7 +12,6 @@ type QueueStatus = {
 
 @Injectable()
 export class OtpQueueService {
-  private readonly logger = new Logger(OtpQueueService.name);
 
   constructor(@InjectQueue('otp-queue') private readonly otpQueue: Queue) {}
 
@@ -33,9 +32,7 @@ export class OtpQueueService {
         }
       );
       
-      this.logger.log(`OTP job added to queue for ${email}, type: ${type}`);
     } catch (error) {
-      this.logger.error(`Failed to add OTP job to queue:`, error);
       throw error;
     }
   }
@@ -57,6 +54,5 @@ export class OtpQueueService {
   async clearQueue(): Promise<void> {
     await this.otpQueue.clean(0, 0, 'completed');
     await this.otpQueue.clean(0, 0, 'failed');
-    this.logger.log('Queue cleared');
   }
 }

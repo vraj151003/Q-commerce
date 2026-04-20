@@ -247,6 +247,31 @@ type Order {
   items: [OrderItem!]!
   couponId: String
   discountAmount: Float
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ProductReview {
+  id: ID!
+  rating: Float!
+  comment: String
+  media: String
+  user: User!
+  product: Product!
+  order: Order!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type SellerReview {
+  id: ID!
+  rating: Float!
+  comment: String
+  user: User!
+  shop: Shop!
+  order: Order!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type PaginatedUsersResponse {
@@ -261,6 +286,24 @@ type UserListPaginatedResponse {
   statusCode: Float!
   message: String!
   data: PaginatedUsersResponse
+}
+
+type SyncProductsResponse {
+  indexed: Float!
+}
+
+type SearchProductResult {
+  id: String!
+  name: String!
+  description: String
+  mrp: Float!
+  sellingPrice: Float!
+  category: String
+  subCategory: String
+  shop: String
+  isAvailable: Boolean!
+  stockQuantity: Float!
+  score: Float!
 }
 
 type UploadResponse {
@@ -388,6 +431,9 @@ type Query {
   getSubCategories: [SubCategory!]!
   getSubCategory(id: String!): SubCategory!
   getProducts: [Product!]!
+
+  """Search products using Elasticsearch"""
+  searchProducts(query: String!): [SearchProductResult!]!
   getProduct(id: String!): Product!
   getCart: Cart!
   getOrders: [Order!]!
@@ -423,6 +469,30 @@ type Query {
   getCouponByCode(code: String!): Coupon!
   getDeliveryProfiles: [DeliveryProfile!]!
   getDeliveryProfile(id: String!): DeliveryProfile!
+
+  """Get all reviews for a product"""
+  getProductReviews(productId: String!): [ProductReview!]!
+
+  """Get average rating for a product"""
+  getProductAverageRating(productId: String!): Float!
+
+  """Get all reviews for a seller"""
+  getSellerReviews(shopId: String!): [SellerReview!]!
+
+  """Get average rating for a seller"""
+  getSellerAverageRating(shopId: String!): Float!
+
+  """Get my product reviews"""
+  getMyProductReviews: [ProductReview!]!
+
+  """Get my seller reviews"""
+  getMySellerReviews: [SellerReview!]!
+
+  """Get all product reviews (Admin only)"""
+  getAllProductReviews: [ProductReview!]!
+
+  """Get all seller reviews (Admin only)"""
+  getAllSellerReviews: [SellerReview!]!
 }
 
 input GetAllUsersInput {
@@ -483,6 +553,9 @@ type Mutation {
   createProduct(input: CreateProductInput!): Product!
   updateProduct(input: UpdateProductInput!): Product!
   deleteProduct(id: String!): Boolean!
+
+  """Sync all products to Elasticsearch (Admin only)"""
+  syncProductsToElasticsearch: SyncProductsResponse!
   uploadMedia(filePath: String!): UploadResponse!
   deleteFile(url: String!): String!
   addToCart(input: AddToCartInput!): Cart!
@@ -535,6 +608,12 @@ type Mutation {
     """Partial refund amount"""
     amount: Float
   ): Boolean!
+
+  """Create a product review (only for users who purchased the product)"""
+  createProductReview(input: CreateProductReviewInput!): ProductReview!
+
+  """Create a seller review (only for users who purchased from the seller)"""
+  createSellerReview(input: CreateSellerReviewInput!): SellerReview!
 }
 
 input RegisterInput {
@@ -809,4 +888,19 @@ input UpdateDeliveryProfileInput {
   latitude: Float
   longitude: Float
   isAvailable: Boolean
+}
+
+input CreateProductReviewInput {
+  rating: Float!
+  comment: String
+  media: String
+  productId: String!
+  orderId: String!
+}
+
+input CreateSellerReviewInput {
+  rating: Float!
+  comment: String
+  shopId: String!
+  orderId: String!
 }

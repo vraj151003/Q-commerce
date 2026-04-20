@@ -1,4 +1,4 @@
-import { Injectable, Logger, UseGuards } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import {
   WebSocketGateway,
   SubscribeMessage,
@@ -32,7 +32,6 @@ interface PaymentStatusNotification {
 export class PaymentGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
-  private readonly logger = new Logger(PaymentGateway.name);
 
   @WebSocketServer()
   server: Server;
@@ -45,14 +44,12 @@ export class PaymentGateway
       client.data?.user?.id || (client.handshake.query.userId as string);
 
     if (!userId) {
-      this.logger.warn(`Client ${client.id} connected without userId`);
       client.disconnect(true);
       return;
     }
     this.connectedClients.set(userId, client);
     client.data.userId = userId;
 
-    this.logger.log(`User ${userId} connected to payment gateway`);
     client.join(`user_${userId}`);
   }
 
@@ -60,7 +57,6 @@ export class PaymentGateway
     const userId = client.data.userId;
     if (userId) {
       this.connectedClients.delete(userId);
-      this.logger.log(`User ${userId} disconnected`);
     }
   }
 
@@ -95,7 +91,6 @@ export class PaymentGateway
     }
 
     client.join(`user_${userId}`);
-    this.logger.debug(`User ${userId} joined payment room`);
   }
 
   getConnectedUsers(): string[] {

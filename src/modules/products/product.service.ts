@@ -4,9 +4,11 @@ import { Repository } from 'typeorm';
 import { Product } from './entity/product.entity';
 import { CreateProductInput } from './dto/create-product.input';
 import { UpdateProductInput } from './dto/update-product.input';
+import { SearchProductResult } from './dto/search-product-result.dto';
 import { Shop } from '../shop/entity/shop.entity';
 import { Category } from '../category/entity/category.entity';
 import { SubCategory } from '../subcategory/entity/subcategory.entity';
+import { SearchService } from '../search/search.service';
 
 @Injectable()
 export class ProductService {
@@ -19,6 +21,7 @@ export class ProductService {
     private categoryRepo: Repository<Category>,
     @InjectRepository(SubCategory)
     private subCategoryRepo: Repository<SubCategory>,
+    private searchService: SearchService,
   ) {}
 
   async createProduct(input: CreateProductInput) {
@@ -46,7 +49,11 @@ export class ProductService {
       product.subCategory = subCategory;
     }
 
-    return this.productRepo.save(product);
+    const savedProduct = await this.productRepo.save(product);
+    
+    await this.searchService.indexProduct(savedProduct);
+    
+    return savedProduct;
   }
 
   findAllProducts() {
@@ -92,12 +99,31 @@ export class ProductService {
       product.subCategory = subCategory;
     }
 
-    return this.productRepo.save(product);
+    const updatedProduct = await this.productRepo.save(product);
+    
+    await this.searchService.indexProduct(updatedProduct);
+    
+    return updatedProduct;
   }
 
   async deleteProduct(id: string) {
     const product = await this.findOneProduct(id);
     await this.productRepo.remove(product);
+    
+    await this.searchService.deleteProduct(id);
+    
     return true;
+  }
+
+  async searchProducts(query: string): Promise<SearchProductResult[]> {
+    return this.searchService.searchProducts(query);
+  }
+
+  async syncProductsToElasticsearch() {
+    const products = await this.productRepo.find({
+      relations: ['shop', 'category', 'subCategory'],
+    })
+    await this.searchService.bulkIndexProducts(products);
+    return { indexed: products.length };
   }
 }

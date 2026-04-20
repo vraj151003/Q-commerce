@@ -66,10 +66,12 @@ export class UserSeed {
       await roleRepo.save(sellerRole);
     }
 
-    // Customer gets read permissions
+    // Customer gets read permissions and review permissions
     const customerPermissions = allPermissions.filter(p => 
       p.name.startsWith('READ_') || 
-      p.name === 'CART'
+      p.name === 'CART' ||
+      p.name === 'CREATE_REVIEW' ||
+      p.name === 'READ_REVIEW'
     );
     if (customerRole && customerPermissions.length > 0) {
       customerRole.permissions = customerPermissions;

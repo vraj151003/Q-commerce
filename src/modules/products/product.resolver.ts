@@ -7,6 +7,8 @@ import { Product } from './entity/product.entity';
 import { ProductService } from './product.service';
 import { CreateProductInput } from './dto/create-product.input';
 import { UpdateProductInput } from './dto/update-product.input';
+import { SyncProductsResponse } from './dto/sync-products-response.dto';
+import { SearchProductResult } from './dto/search-product-result.dto';
 
 @Resolver(() => Product)
 @Injectable()
@@ -25,6 +27,11 @@ export class ProductResolver {
     return this.productService.findAllProducts();
   }
 
+  @Query(() => [SearchProductResult], { description: 'Search products using Elasticsearch' })
+  searchProducts(@Args('query') query: string) {
+    return this.productService.searchProducts(query);
+  }
+
   @Query(() => Product)
   getProduct(@Args('id') id: string) {
     return this.productService.findOneProduct(id);
@@ -40,5 +47,11 @@ export class ProductResolver {
   @Permissions('DELETE_PRODUCT')
   deleteProduct(@Args('id') id: string) {
     return this.productService.deleteProduct(id);
+  }
+
+  @Mutation(() => SyncProductsResponse, { description: 'Sync all products to Elasticsearch (Admin only)' })
+  @Permissions('CREATE_PRODUCT')
+  syncProductsToElasticsearch() {
+    return this.productService.syncProductsToElasticsearch();
   }
 }

@@ -8,7 +8,7 @@ export default registerAs('database', () => ({
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'testdb',
   autoLoadEntities: true,
-  synchronize: process.env.NODE_ENV !== 'production',
+  synchronize: false,
   jwtSecret: process.env.JWT_SECRET || 'test',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '3d',
   email: process.env.EMAIL || process.env.MAIL_USER || '',
@@ -26,4 +26,9 @@ export default registerAs('database', () => ({
   stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
   stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
+  elasticsearch: {
+    node: process.env.ELASTICSEARCH_NODE || 'http://localhost:9200',
+    username: process.env.ELASTICSEARCH_USERNAME || undefined,
+    password: process.env.ELASTICSEARCH_PASSWORD || undefined,
+  },
 }));

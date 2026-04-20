@@ -115,8 +115,10 @@ export class Order {
   discountAmount: number | null;
 
   @CreateDateColumn()
+  @Field()
   createdAt: Date;
 
   @UpdateDateColumn()
+  @Field()
   updatedAt: Date;
 }

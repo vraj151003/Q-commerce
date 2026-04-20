@@ -6,9 +6,10 @@ import { SubCategory } from '../subcategory/entity/subcategory.entity';
 import { ProductService } from './product.service';
 import { ProductResolver } from './product.resolver';
 import { Product } from './entity/product.entity';
+import { SearchModule } from '../search/search.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Product, Shop, Category, SubCategory])],
+  imports: [TypeOrmModule.forFeature([Product, Shop, Category, SubCategory]), SearchModule],
   providers: [ProductService, ProductResolver],
   exports: [ProductService],
 })

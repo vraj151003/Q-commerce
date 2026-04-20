@@ -13,7 +13,6 @@ export interface OtpJobData {
 @Injectable()
 @Processor('otp-queue')
 export class OtpProcessor extends WorkerHost {
-  private readonly logger = new Logger(OtpProcessor.name);
 
   constructor(private readonly mailService: MailService) {
     super();
@@ -22,7 +21,6 @@ export class OtpProcessor extends WorkerHost {
   async process(job: Job<OtpJobData>): Promise<void> {
     const { email, otp, type } = job.data;
 
-    this.logger.log(`Processing OTP job for ${email}, type: ${type}`);
 
     try {
       if (type === 'REGISTER') {
@@ -31,9 +29,7 @@ export class OtpProcessor extends WorkerHost {
         await this.mailService.sendForgotPasswordOtp(email, otp);
       }
 
-      this.logger.log(`OTP sent successfully to ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to send OTP to ${email}:`, error);
       throw error;
     }
   }

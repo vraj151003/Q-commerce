@@ -26,6 +26,9 @@ import { PaymentModule } from './modules/payment/payment.module';
 import { TaxModule } from './modules/tax/tax.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { CouponModule } from './modules/coupon/coupon.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
+import { SearchModule } from './modules/search/search.module';
+import { SchedulerModule } from './modules/scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -78,6 +81,9 @@ import { CouponModule } from './modules/coupon/coupon.module';
     TaxModule,
     NotificationModule,
     CouponModule,
+    ReviewsModule,
+    SearchModule,
+    SchedulerModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],
