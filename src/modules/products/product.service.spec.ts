@@ -9,6 +9,7 @@ import { Category } from '../category/entity/category.entity';
 import { SubCategory } from '../subcategory/entity/subcategory.entity';
 import { CreateProductInput } from './dto/create-product.input';
 import { UpdateProductInput } from './dto/update-product.input';
+import { SearchService } from '../search/search.service';
 
 describe('ProductService', () => {
   let service: ProductService;
@@ -135,6 +136,15 @@ describe('ProductService', () => {
           provide: getRepositoryToken(SubCategory),
           useValue: {
             findOne: jest.fn(),
+          },
+        },
+        {
+          provide: SearchService,
+          useValue: {
+            indexProduct: jest.fn(),
+            deleteProduct: jest.fn(),
+            searchProducts: jest.fn(),
+            bulkIndexProducts: jest.fn(),
           },
         },
       ],

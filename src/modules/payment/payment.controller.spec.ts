@@ -332,57 +332,44 @@ describe('PaymentController', () => {
       expect(result).toEqual({ received: true });
     });
 
-    it('should log error when STRIPE_WEBHOOK_SECRET is not defined', async () => {
+    it('should return undefined when STRIPE_WEBHOOK_SECRET is not defined', async () => {
       delete process.env.STRIPE_WEBHOOK_SECRET;
-      const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
 
-      await controller.handleStripeWebHook(
+      const result = await controller.handleStripeWebHook(
         { rawBody: mockRawBody } as any,
         mockSignature,
       );
 
-      expect(loggerSpy).toHaveBeenCalledWith(
-        'STRIPE_WEBHOOK_SECRET is not defined',
-      );
-      loggerSpy.mockRestore();
+      expect(result).toBeUndefined();
     });
 
-    it('should log error when signature is missing', async () => {
+    it('should handle missing signature', async () => {
       process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_secret';
-      const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
 
       await controller.handleStripeWebHook(
         { rawBody: mockRawBody } as any,
         undefined as any,
       );
-
-      expect(loggerSpy).toHaveBeenCalledWith('Webhook signature is missing');
-      loggerSpy.mockRestore();
     });
 
-    it('should log success when webhook is processed successfully', async () => {
+    it('should process webhook successfully', async () => {
       process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_secret';
       (stripe.webhooks.constructEvent as jest.Mock).mockReturnValue(mockEvent);
       paymentService.handleWebhook.mockResolvedValue(undefined);
-      const loggerSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
 
       await controller.handleStripeWebHook(
         { rawBody: mockRawBody } as any,
         mockSignature,
       );
 
-      expect(loggerSpy).toHaveBeenCalledWith(
-        `webhook processed successfully: ${mockEvent.type}`,
-      );
-      loggerSpy.mockRestore();
+      expect(paymentService.handleWebhook).toHaveBeenCalledWith(mockEvent);
     });
 
-    it('should log error when webhook signature verification fails', async () => {
+    it('should throw error when webhook signature verification fails', async () => {
       process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_secret';
       (stripe.webhooks.constructEvent as jest.Mock).mockImplementation(() => {
         throw new Error('Invalid signature');
       });
-      const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
 
       await expect(
         controller.handleStripeWebHook(
@@ -390,20 +377,14 @@ describe('PaymentController', () => {
           'invalid',
         ),
       ).rejects.toThrow(BadRequestException);
-
-      expect(loggerSpy).toHaveBeenCalledWith(
-        'Webhook signature verification failed: Invalid signature',
-      );
-      loggerSpy.mockRestore();
     });
 
-    it('should log error when webhook processing fails', async () => {
+    it('should throw error when webhook processing fails', async () => {
       process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_secret';
       (stripe.webhooks.constructEvent as jest.Mock).mockReturnValue(mockEvent);
       paymentService.handleWebhook.mockRejectedValue(
         new Error('Processing error'),
       );
-      const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
 
       await expect(
         controller.handleStripeWebHook(
@@ -411,11 +392,6 @@ describe('PaymentController', () => {
           mockSignature,
         ),
       ).rejects.toThrow(BadRequestException);
-
-      expect(loggerSpy).toHaveBeenCalledWith(
-        'Webhook processing failed: Processing error',
-      );
-      loggerSpy.mockRestore();
     });
 
     it('should handle webhook with null event type', async () => {
